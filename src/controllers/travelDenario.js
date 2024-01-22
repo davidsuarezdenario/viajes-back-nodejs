@@ -25,16 +25,23 @@ exports.booking = async (req, res) => {
         res.status(200).json({ success: true, data: 'No se recibe texto' });
     }
 }
-/* `v2/booking/check_flights?
-booking_token=${data}
-&bnum=${data}&adults=${data}&children=${data}&infants=${data}&session_id=7f541be8-4d08-89ee-8ead-e0a95f63cfeb
-&currency=COP&visitor_uniqid=049b01af4d674d6ab9bafb35_0|049b01af4d674d6ab9bafb35_1|049b01af4d674d6ab9bafb35_2|049b01af4d674d6ab9bafb35_3` */
 exports.bookingStep1 = async (req, res) => {
     const data = req.body;
     if (data.booking_token != '' && data.booking_token != undefined) {
         if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
         const search = `v2/booking/check_flights?booking_token=${data.booking_token}&bnum=${data.adults + data.children + data.infants}&adults=${data.adults}&children=${data.children}&infants=${data.infants}&session_id=${data.session_id}&currency=COP&visitor_uniqid=${data.visitor_uniqid}`;
         const resOk = await procesosTravelDenario(search, 'GET', {});
+        res.status(200).json({ success: false, data: JSON.parse(resOk) });
+    } else {
+        res.status(200).json({ success: true, data: 'No se recibe texto' });
+    }
+}
+exports.bookingStep2 = async (req, res) => {
+    const data = req.body; let body = { health_declaration_checked: true, lang: "es", locale: "es-CO", payment_gateway: "payu" }
+    if (data.visitor_uniqid != '' && data.visitor_uniqid != undefined) {
+        if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
+        const search = `v2/booking/save_booking?visitor_uniqid=${data.visitor_uniqid}`;
+        const resOk = await procesosTravelDenario(search, 'POST', {});
         res.status(200).json({ success: false, data: JSON.parse(resOk) });
     } else {
         res.status(200).json({ success: true, data: 'No se recibe texto' });
