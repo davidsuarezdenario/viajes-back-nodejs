@@ -2,6 +2,13 @@ const jwt = require('jsonwebtoken');
 const sql = require("mssql");
 const hash = require('../utils/hash');
 
+exports.sesion = async (req, res) => {
+    res.status(200).json({
+        Error: false,
+        Message: 'Sesión activa'
+    });
+};
+
 exports.login = async (req, res) => {
     const { username, password } = req.body;
     const request = new sql.Request();
@@ -18,22 +25,32 @@ exports.login = async (req, res) => {
 async function verifLogin(resSql,resApi,username,password){
     console.log('verifLogin: ',resSql);
     if(!resSql){
-        resApi.status(401).send({ Error: true, Message: 'Usuario no encontrado' });
+        resApi.status(401).send({ 
+            Error: true, 
+            Message: 'Usuario no encontrado' 
+        });
     }else{
         if(await hash.comparePassword(password, resSql.Pass)){
             const token = jwt.sign({ username: resSql.username }, process.env.JWT_SECRET, { expiresIn: '5d' });
             const updateLoginResponse = await updateLogin(username);
             if(updateLoginResponse.Error){
                 console.log('updateLoginResponse: ',updateLoginResponse);
-                resApi.status(401).send(updateLoginResponse);
+                resApi.status(401).send({
+                    Error: true,
+                    Message: updateLoginResponse
+                });
             }else{
                 resApi.status(200).json({
+                    Error: false,
                     Token: token,
                     Documento: resSql.Documento
                 });
             }
         }else{
-            resApi.status(401).send({ Error: true, Message: 'Contraseña incorrecta' });
+            resApi.status(401).send({ 
+                Error: true, 
+                Message: 'Contraseña incorrecta' 
+            });
         }
     }
 }

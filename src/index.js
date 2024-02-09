@@ -1,10 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 require('./config/database');
 const apiKeyVerify = require('./middleware/apiKey');
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 app.use(apiKeyVerify);
 
@@ -18,6 +20,9 @@ app.use('/auth',authRouter);
 
 const travelDenarioRouter = require('./routes/travelDenario');
 app.use('/travel',travelDenarioRouter);
+
+const usersRouter = require('./routes/users');
+app.use('/users',usersRouter);
 
 
 
