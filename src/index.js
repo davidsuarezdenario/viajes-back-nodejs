@@ -16,8 +16,8 @@ app.use('/greeting',greetingRouter);
 const authRouter = require('./routes/auth');
 app.use('/auth',authRouter);
 
-const travelDenarioRouter = require('./routes/travelDenario');
-app.use('/travel',travelDenarioRouter);
+const travelRouter = require('./routes/travel');
+app.use('/travel',travelRouter);
 
 
 
