@@ -13,13 +13,13 @@ app.use(apiKeyVerify);
 
 
 const greetingRouter = require('./routes/greeting');
-app.use('/greeting',greetingRouter);
+app.use('/greeting', greetingRouter);
 
 const authRouter = require('./routes/auth');
-app.use('/auth',authRouter);
+app.use('/auth', authRouter);
 
-const travelDenarioRouter = require('./routes/travelDenario');
-app.use('/travel',travelDenarioRouter);
+const travelRouter = require('./routes/travel');
+app.use('/travel', travelRouter);
 
 const usersRouter = require('./routes/users');
 app.use('/users',usersRouter);
