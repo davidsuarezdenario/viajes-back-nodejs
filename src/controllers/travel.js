@@ -36,7 +36,7 @@ exports.booking = async (req, res) => {
     } else {
         res.status(200).json({ success: true, data: 'No se recibe texto' });
     } */
-    const arreglo = Object.entries(req.body); let pathConsulta = 'v2/search?curr=COP&locale=es';
+    const arreglo = Object.entries(req.body); let pathConsulta = 'v2/search?curr=COP&locale=co';
     for (dato of arreglo) { pathConsulta += `&${dato[0]}=${dato[1]}`; }
     const resOk = await procesosTravel(pathConsulta, 'GET', {});
     res.status(200).json({ success: false, data: JSON.parse(resOk) });
