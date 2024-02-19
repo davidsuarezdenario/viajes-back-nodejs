@@ -7,7 +7,7 @@ const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90
 exports.search_text = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
-        const search = `locations/query?term=${data.search}&locale=es-CO&location_types=airport&limit=10&active_online=true`;
+        const search = `locations/query?term=${data.search}&locale=es-ES&location_types=airport&limit=10&active_online=true`;
         const resOk = await procesosTravel(search, 'GET', {});
         res.status(200).json({ success: false, data: JSON.parse(resOk) });
     } else {
@@ -17,7 +17,7 @@ exports.search_text = async (req, res) => {
 exports.search_location = async (req, res) => {
     const data = req.body;
     if (data.lat != '' && data.lat != undefined) {
-        const search = `locations/radius?lat=${data.lat}&lon=${data.lon}&radius=250&locale=es-CO&location_types=airport&limit=10&active_only=true`;
+        const search = `locations/radius?lat=${data.lat}&lon=${data.lon}&radius=250&locale=es-ES&location_types=airport&limit=10&active_only=true`;
         const resOk = await procesosTravel(search, 'GET', {});
         res.status(200).json({ success: false, data: JSON.parse(resOk) });
     } else {
@@ -36,7 +36,7 @@ exports.booking = async (req, res) => {
     } else {
         res.status(200).json({ success: true, data: 'No se recibe texto' });
     } */
-    const arreglo = Object.entries(req.body); let pathConsulta = 'v2/search?curr=COP&locale=es';
+    const arreglo = Object.entries(req.body); let pathConsulta = 'v2/search?curr=COP&locale=co';
     for (dato of arreglo) { pathConsulta += `&${dato[0]}=${dato[1]}`; }
     const resOk = await procesosTravel(pathConsulta, 'GET', {});
     res.status(200).json({ success: false, data: JSON.parse(resOk) });
