@@ -26,30 +26,6 @@ exports.search_location = async (req, res) => {
 }
 /* {{kiwi}}locations/radius?lat=40.730610&lon=-73.935242&radius=250&locale=en-US&location_types=airport&limit=20&active_only=true */
 exports.booking = async (req, res) => {
-    /* 
-    date_from - date_to* Ida 
-    return_from - return_to Vuelta
-    nights_in_dst_from: number
-    nights_in_dst_to: number
-    max_fly_duration: number
-    ret_from_diff_city: boolean
-    ret_to_diff_city: boolean
-    selected_cabins: M (economy), W (economy premium), C (business), or F (first class) M
-    mix_with_cabins: M (economy), W (economy premium), C (business), or F (first class)
-    only_working_days: boolean
-    only_weekends: boolean
-    price_from: number
-    price_to: number
-    dtime_from: 11:00 11AM, 23:00 11PM
-    dtime_to: 11:00 11AM, 23:00 11PM
-    atime_from: 11:00 11AM, 23:00 11PM
-    atime_to: 11:00 11AM, 23:00 11PM
-    vehicle_type: aircraft (default), bus, train.
-    stopover_to: number
-    max_stopovers: number
-    sort: price, duration, quality, date
-    limit: number
-    */
     /* const data = req.body; let child = ''; let infant = '';
     if (data.fly_from != '' && data.fly_from != undefined) {
         if (data.infants > 0 && data.infants < 10) { infant = `&infants=${data.infants}`; }
