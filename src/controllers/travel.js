@@ -22,7 +22,7 @@ exports.search_location = async (req, res) => {
         const resOk = await procesosTravel(pathConsulta, 'GET', {});
         res.status(200).json({ error: false, data: JSON.parse(resOk) });
     } else {
-        res.status(200).json({ error: true, data: 'No se recibe texto' });
+        res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
 exports.booking = async (req, res) => {
@@ -39,7 +39,7 @@ exports.bookingStep1 = async (req, res) => {
         const resOk = await procesosTravel(search, 'GET', {});
         res.status(200).json({ error: false, data: JSON.parse(resOk) });
     } else {
-        res.status(200).json({ error: true, data: 'No se recibe texto' });
+        res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
 exports.bookingStep2 = async (req, res) => {
@@ -50,7 +50,7 @@ exports.bookingStep2 = async (req, res) => {
         const resOk = await procesosTravel(search, 'POST', {});
         res.status(200).json({ error: false, data: JSON.parse(resOk) });
     } else {
-        res.status(200).json({ error: true, data: 'No se recibe texto' });
+        res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
 async function procesosTravel(path, method, body) {
