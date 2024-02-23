@@ -10,7 +10,7 @@ exports.search_text = async (req, res) => {
         let pathConsulta = `locations/query?term=${data.search}&limit=${data.limit}&locale=es-ES&active_online=true`;
         if (data.location_types) { for (dato of data.location_types) { pathConsulta += `&location_types=${dato}`; } } else { pathConsulta += `&location_types=airport`; }
         const resOk = await procesosTravel(pathConsulta, 'GET', {});
-        res.status(200).json({ success: false, data: JSON.parse(resOk) });
+        res.status(200).json({ error: false, data: JSON.parse(resOk) });
     } else {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
@@ -20,16 +20,16 @@ exports.search_location = async (req, res) => {
     if (data.lat != '' && data.lat != undefined) {
         const pathConsulta = `locations/radius?lat=${data.lat}&lon=${data.lon}&radius=250&locale=es-ES&active_only=true&location_types=city&location_types=airport`;
         const resOk = await procesosTravel(pathConsulta, 'GET', {});
-        res.status(200).json({ success: false, data: JSON.parse(resOk) });
+        res.status(200).json({ error: false, data: JSON.parse(resOk) });
     } else {
-        res.status(200).json({ success: true, data: 'No se recibe texto' });
+        res.status(200).json({ error: true, data: 'No se recibe texto' });
     }
 }
 exports.booking = async (req, res) => {
     const arreglo = Object.entries(req.body); let pathConsulta = 'v2/search?curr=COP&locale=co';
     for (dato of arreglo) { pathConsulta += `&${dato[0]}=${dato[1]}`; }
     const resOk = await procesosTravel(pathConsulta, 'GET', {});
-    res.status(200).json({ success: false, data: JSON.parse(resOk) });
+    res.status(200).json({ error: false, data: JSON.parse(resOk) });
 }
 exports.bookingStep1 = async (req, res) => {
     const data = req.body;
@@ -37,9 +37,9 @@ exports.bookingStep1 = async (req, res) => {
         if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
         const search = `v2/booking/check_flights?booking_token=${data.booking_token}&bnum=${data.adults + data.children + data.infants}&adults=${data.adults}&children=${data.children}&infants=${data.infants}&session_id=${data.session_id}&currency=COP&visitor_uniqid=${data.visitor_uniqid}`;
         const resOk = await procesosTravel(search, 'GET', {});
-        res.status(200).json({ success: false, data: JSON.parse(resOk) });
+        res.status(200).json({ error: false, data: JSON.parse(resOk) });
     } else {
-        res.status(200).json({ success: true, data: 'No se recibe texto' });
+        res.status(200).json({ error: true, data: 'No se recibe texto' });
     }
 }
 exports.bookingStep2 = async (req, res) => {
@@ -48,9 +48,9 @@ exports.bookingStep2 = async (req, res) => {
         if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
         const search = `v2/booking/save_booking?visitor_uniqid=${data.visitor_uniqid}`;
         const resOk = await procesosTravel(search, 'POST', {});
-        res.status(200).json({ success: false, data: JSON.parse(resOk) });
+        res.status(200).json({ error: false, data: JSON.parse(resOk) });
     } else {
-        res.status(200).json({ success: true, data: 'No se recibe texto' });
+        res.status(200).json({ error: true, data: 'No se recibe texto' });
     }
 }
 async function procesosTravel(path, method, body) {
