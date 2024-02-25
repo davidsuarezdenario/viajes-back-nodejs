@@ -53,30 +53,34 @@ exports.booking = async (req, res) => {
     res.status(200).json({ error: false, data: JSON.parse(resOk) });
 }
 exports.bookingStep1 = async (req, res) => {
-    const data = req.body; let contador = 0;
+    const data = req.body;
     if (data.booking_token != '' && data.booking_token != undefined) {
         if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
         const search = `v2/booking/check_flights?booking_token=${data.booking_token}&bnum=${data.bnum}&adults=${data.adults}&children=${data.children}&infants=${data.infants}&session_id=${data.session_id}&currency=COP&visitor_uniqid=${data.visitor_uniqid}`;
-        //const resOk = await procesosTravel(search, 'GET', {});
-        /* let resOk = {};
-        while (contador < 10) {
-            const res = await procesosTravel(search, 'GET', {});
-            console.log("El contador es: " + contador + JSON.parse(res).flights_checked + '-' + JSON.parse(res).price_change + '-' + JSON.parse(res).flights_invalid);
-            contador++; // Incrementar el contador en cada iteración
+        //const resOk = await validarBookingStep1(search, 0);
+        let resOk = { data: 'vuelo no valido' }
+        /* while (contador < 5) {
+            const res = setTimeout(async function () { await procesosTravel(search, 'GET', {}) }, 2000);
+            console.log("El contador es: " + contador + ' + ' + JSON.parse(res).flights_checked + '-' + JSON.parse(res).price_change + '-' + JSON.parse(res).flights_invalid);
             if (JSON.parse(res).flights_checked == true && JSON.parse(res).price_change == false && JSON.parse(res).flights_invalid == false) {
+                console.log('vuelo oks');
                 resOk = JSON.parse(res);
                 break;
             }
+            contador++;
         } */
-        /* const intervalID = await setInterval(async function () {
-            resOk = await procesosTravel(search, 'GET', {});
-            console.log('resOk: ', resOk);
-            console.log(JSON.parse(resOk));
-            if (JSON.parse(resOk).flights_checked == true && JSON.parse(resOk).price_change == false && JSON.parse(resOk).flights_invalid == false) {
-                clearInterval(intervalID);
+        for (let i = 0; i < 6; i++) {
+            const res = await procesosTravel(search, 'GET', {});
+            console.log("El contador es: " + i + ' + ' + JSON.parse(res).flights_checked + '-' + JSON.parse(res).price_change + '-' + JSON.parse(res).flights_invalid);
+            if (JSON.parse(res).flights_checked == true && JSON.parse(res).price_change == false && JSON.parse(res).flights_invalid == false) {
+
+                resOk = JSON.parse(res);
+                i = 6;
+            } else {
+                await esperar();
+                //await setTimeout(function () { console.log('intento: ' + i); }, 2000);
             }
-        }, 2500); */
-        const resOk = await validarBookingStep1(search, 0);
+        }
         if (resOk.flights_checked) {
             res.status(200).json({ error: false, data: resOk });
         } else {
@@ -86,19 +90,24 @@ exports.bookingStep1 = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
+function esperar(){
+    return new Promise(resolve => setTimeout(resolve, 2000));
+}
 async function validarBookingStep1(search, cont) {
     return new Promise(async (resolve, reject) => {
-        if (cont < 5) {
-            const resOk = await procesosTravel(search, 'GET', {});
-            if (JSON.parse(resOk).flights_checked == true && JSON.parse(resOk).price_change == false && JSON.parse(resOk).flights_invalid == false) {
-                resolve(JSON.parse(resOk));
-            } else {
-                console.log("La respuesta no es verdadera, reintentando en 2 segundos...");
-                // Si la respuesta no es verdadera, volver a consultar el API en 2 segundos
-                setTimeout(validarBookingStep1(search, cont), 1500);
-            }
+        cont++;
+        const resOk = await procesosTravel(search, 'GET', {});
+        console.log("El contador es: " + cont + ' + ' + JSON.parse(resOk).flights_checked + '-' + JSON.parse(resOk).price_change + '-' + JSON.parse(resOk).flights_invalid);
+        if (JSON.parse(resOk).flights_checked == true && JSON.parse(resOk).price_change == false && JSON.parse(resOk).flights_invalid == false) {
+            console.log('salir 1');
+            resolve(JSON.parse(resOk));
+        } else if (cont <= 5) {
+            console.log(cont);
+            console.log('nuevo intento');
+            setTimeout(function () { validarBookingStep1(search, cont) }, 2000);
         } else {
-            resolve({data: 'vuelo no disponible'});
+            console.log('maximo intentos');
+            resolve({ data: false });
         }
     });
 }
