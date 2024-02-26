@@ -57,19 +57,37 @@ exports.bookingStep1 = async (req, res) => {
     if (data.booking_token != '' && data.booking_token != undefined) {
         if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
         const search = `v2/booking/check_flights?booking_token=${data.booking_token}&bnum=${data.bnum}&adults=${data.adults}&children=${data.children}&infants=${data.infants}&session_id=${data.session_id}&currency=COP&visitor_uniqid=${data.visitor_uniqid}`;
-        const resOk = await procesosTravel(search, 'GET', {});
-        /* const intervalID = await setInterval(async function () {
-            resOk = await procesosTravel(search, 'GET', {});
-            console.log('resOk: ', resOk);
-            console.log(JSON.parse(resOk));
-            if (JSON.parse(resOk).flights_checked == true && JSON.parse(resOk).price_change == false && JSON.parse(resOk).flights_invalid == false) {
-                clearInterval(intervalID);
-            }
-        }, 2500); */
-        res.status(200).json({ error: false, data: JSON.parse(resOk) });
+        let resOk = { data: 'vuelo no valido' }
+        for (let i = 0; i < 6; i++) {
+            const res = await procesosTravel(search, 'GET', {});
+            if (JSON.parse(res).flights_checked == true && JSON.parse(res).price_change == false && JSON.parse(res).flights_invalid == false) { resOk = JSON.parse(res); i = 6; } else { await esperar(2000); }
+        }
+        if (resOk.flights_checked) {
+            res.status(200).json({ error: false, data: resOk });
+        } else {
+            res.status(200).json({ error: false, data: 'vuelo no disponible' });
+        }
     } else {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
+}
+async function validarBookingStep1(search, cont) {
+    return new Promise(async (resolve, reject) => {
+        cont++;
+        const resOk = await procesosTravel(search, 'GET', {});
+        console.log("El contador es: " + cont + ' + ' + JSON.parse(resOk).flights_checked + '-' + JSON.parse(resOk).price_change + '-' + JSON.parse(resOk).flights_invalid);
+        if (JSON.parse(resOk).flights_checked == true && JSON.parse(resOk).price_change == false && JSON.parse(resOk).flights_invalid == false) {
+            console.log('salir 1');
+            resolve(JSON.parse(resOk));
+        } else if (cont <= 5) {
+            console.log(cont);
+            console.log('nuevo intento');
+            setTimeout(function () { validarBookingStep1(search, cont) }, 2000);
+        } else {
+            console.log('maximo intentos');
+            resolve({ data: false });
+        }
+    });
 }
 exports.bookingStep2 = async (req, res) => {
     const data = req.body; let body = { health_declaration_checked: true, lang: "es", locale: "es-CO", payment_gateway: "payu" };
@@ -77,6 +95,16 @@ exports.bookingStep2 = async (req, res) => {
     if (data.visitor_uniqid != '' && data.visitor_uniqid != undefined) {
         if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
         const search = `v2/booking/save_booking?visitor_uniqid=${data.visitor_uniqid}`;
+        const resOk = await procesosTravel(search, 'POST', body);
+        res.status(200).json({ error: false, data: resOk });
+    } else {
+        res.status(400).json({ error: true, data: 'No se recibe texto' });
+    }
+}
+exports.bookingStep3 = async (req, res) => {
+    const data = req.body;
+    if (data.booking_id != '' && data.booking_id != undefined) {
+        const search = `v2/booking/booking/confirm_payment`;
         const resOk = await procesosTravel(search, 'POST', body);
         res.status(200).json({ error: false, data: resOk });
     } else {
@@ -100,3 +128,4 @@ async function procesosTravel(path, method, body) {
         })
     });
 }
+function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); }

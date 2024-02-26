@@ -10,5 +10,6 @@ router.post('/search_topdestinations', travelController.search_topdestinations);
 router.post('/booking', travelController.booking);
 router.post('/booking_one', travelController.bookingStep1);
 router.post('/booking_two', travelController.bookingStep2);
+router.post('/booking_three', travelController.bookingStep3);
 
 module.exports = router;
