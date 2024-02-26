@@ -57,29 +57,10 @@ exports.bookingStep1 = async (req, res) => {
     if (data.booking_token != '' && data.booking_token != undefined) {
         if (data.adults == undefined) { data.adults = 0; } if (data.children == undefined) { data.children = 0; } if (data.infants == undefined) { data.infants = 0; }
         const search = `v2/booking/check_flights?booking_token=${data.booking_token}&bnum=${data.bnum}&adults=${data.adults}&children=${data.children}&infants=${data.infants}&session_id=${data.session_id}&currency=COP&visitor_uniqid=${data.visitor_uniqid}`;
-        //const resOk = await validarBookingStep1(search, 0);
         let resOk = { data: 'vuelo no valido' }
-        /* while (contador < 5) {
-            const res = setTimeout(async function () { await procesosTravel(search, 'GET', {}) }, 2000);
-            console.log("El contador es: " + contador + ' + ' + JSON.parse(res).flights_checked + '-' + JSON.parse(res).price_change + '-' + JSON.parse(res).flights_invalid);
-            if (JSON.parse(res).flights_checked == true && JSON.parse(res).price_change == false && JSON.parse(res).flights_invalid == false) {
-                console.log('vuelo oks');
-                resOk = JSON.parse(res);
-                break;
-            }
-            contador++;
-        } */
         for (let i = 0; i < 6; i++) {
             const res = await procesosTravel(search, 'GET', {});
-            console.log("El contador es: " + i + ' + ' + JSON.parse(res).flights_checked + '-' + JSON.parse(res).price_change + '-' + JSON.parse(res).flights_invalid);
-            if (JSON.parse(res).flights_checked == true && JSON.parse(res).price_change == false && JSON.parse(res).flights_invalid == false) {
-
-                resOk = JSON.parse(res);
-                i = 6;
-            } else {
-                await esperar();
-                //await setTimeout(function () { console.log('intento: ' + i); }, 2000);
-            }
+            if (JSON.parse(res).flights_checked == true && JSON.parse(res).price_change == false && JSON.parse(res).flights_invalid == false) { resOk = JSON.parse(res); i = 6; } else { await esperar(2000); }
         }
         if (resOk.flights_checked) {
             res.status(200).json({ error: false, data: resOk });
@@ -89,9 +70,6 @@ exports.bookingStep1 = async (req, res) => {
     } else {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
-}
-function esperar(){
-    return new Promise(resolve => setTimeout(resolve, 2000));
 }
 async function validarBookingStep1(search, cont) {
     return new Promise(async (resolve, reject) => {
@@ -140,3 +118,4 @@ async function procesosTravel(path, method, body) {
         })
     });
 }
+function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); }
