@@ -101,6 +101,16 @@ exports.bookingStep2 = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
+exports.bookingStep3 = async (req, res) => {
+    const data = req.body;
+    if (data.booking_id != '' && data.booking_id != undefined) {
+        const search = `v2/booking/booking/confirm_payment`;
+        const resOk = await procesosTravel(search, 'POST', body);
+        res.status(200).json({ error: false, data: resOk });
+    } else {
+        res.status(400).json({ error: true, data: 'No se recibe texto' });
+    }
+}
 async function procesosTravel(path, method, body) {
     return new Promise((resolve, reject) => {
         let options = {};
