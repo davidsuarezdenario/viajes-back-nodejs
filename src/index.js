@@ -10,8 +10,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(apiKeyVerify);
 
-
-
 const greetingRouter = require('./routes/greeting');
 app.use('/greeting', greetingRouter);
 
@@ -24,7 +22,8 @@ app.use('/travel', travelRouter);
 const usersRouter = require('./routes/users');
 app.use('/users',usersRouter);
 
-
+const methodsDenarioRouter = require('./routes/methodsDenario');
+app.use('/denario', methodsDenarioRouter);
 
 const port = 3000;
 app.listen(port, () => {
