@@ -22,9 +22,6 @@ app.use('/travel', travelRouter);
 const usersRouter = require('./routes/users');
 app.use('/users',usersRouter);
 
-const methodsDenarioRouter = require('./routes/methodsDenario');
-app.use('/denario', methodsDenarioRouter);
-
 const port = 3000;
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);

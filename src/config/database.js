@@ -38,7 +38,7 @@ const configLocal = {
   }
 };
 
-var connection;
+let connection;
 try {
     connection = sql.connect(configLocal, (error) => {
         if (error) {
