@@ -2,6 +2,7 @@
 const hash = require('../utils/hash'); */
 const sql = require("mssql");
 const requesthttp = require('request');
+const denarioController = require('../controllers/denario');
 const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
 
 exports.search_text = async (req, res) => {
@@ -132,21 +133,27 @@ exports.saveBookingId = async (req, res) => {
     const request = new sql.Request(); const data = req.body;
     const textSql = `INSERT INTO BookingFlights (CreateDate, Document, EntireName, Email, Phone, Amount, Departure, Arrival, DepartureDate, ArrivalDate, RoundTrip) OUTPUT inserted.Id VALUES
     (GETDATE(), '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, '${(data.Departure).trim()}', '${(data.Arrival).trim()}', '${(data.DepartureDate).trim()}', '${(data.ArrivalDate).trim()}', ${data.RoundTrip ? 1 : 0})`;
-    request.query(textSql).then(result => { 
-        res.status(200).json({ error: false, data: result.recordset[0].Id }); 
+    request.query(textSql).then(result => {
+        res.status(200).json({ error: false, data: result.recordset[0].Id });
     }).catch(err => {
         request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
-        res.status(400).json({ error: true, data: err }); 
+        res.status(400).json({ error: true, data: err });
     });
 }
 exports.getBookingId = async (req, res) => {
     const request = new sql.Request(); const data = req.body;
     const textSql = `SELECT * FROM BookingFlights WHERE Id=${data.Id}`;
-    request.query(textSql).then(result => { 
-        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
+    request.query(textSql).then(async result => {
+        if (result.recordsets[0].length == 1) {
+            const respDenario = await denarioController.credit_limit(result.recordsets[0][0].Document);
+            res.status(200).json({ error: false, data: Object.assign(respDenario.body, result.recordsets[0][0]) });
+        } else {
+            res.status(200).json({ error: true, data: 'No se encuentra el registro' });
+        }
+        /* result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' }); */
     }).catch(err => {
         console.log(err);
-        res.status(400).json({ error: true, data: err }); 
+        res.status(400).json({ error: true, data: err });
     });
 }
 function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); }
