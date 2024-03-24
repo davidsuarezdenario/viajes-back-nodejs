@@ -15,5 +15,6 @@ router.post('/booking_three', travelController.bookingStep3);
 
 /* WANDERLUST */
 router.post('/save_booking', travelController.saveBookingId);
+router.post('/get_booking', travelController.getBookingId);
 
 module.exports = router;
