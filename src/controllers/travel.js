@@ -143,7 +143,7 @@ exports.getBookingId = async (req, res) => {
     const request = new sql.Request(); const data = req.body;
     const textSql = `SELECT * FROM BookingFlights WHERE Id=${data.Id}`;
     request.query(textSql).then(result => { 
-        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
+        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
     }).catch(err => {
         console.log(err);
         res.status(400).json({ error: true, data: err }); 
