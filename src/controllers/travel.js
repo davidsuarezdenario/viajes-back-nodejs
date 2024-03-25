@@ -5,7 +5,7 @@ const requesthttp = require('request');
 const denarioController = require('../controllers/denario');
 const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
 
-exports.search_text = async (req, res) => {
+exports.searchText = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
         let pathConsulta = `locations/query?term=${data.search}&limit=${data.limit}&locale=es-ES&active_online=true`;
@@ -16,7 +16,7 @@ exports.search_text = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
-exports.search_location = async (req, res) => {
+exports.searchLocation = async (req, res) => {
     const data = req.body;
     if (data.lat != '' && data.lat != undefined) {
         const pathConsulta = `locations/radius?lat=${data.lat}&lon=${data.lon}&radius=250&locale=es-ES&active_only=true&location_types=city&location_types=airport`;
@@ -26,7 +26,7 @@ exports.search_location = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
-exports.search_subentity = async (req, res) => {
+exports.searchSubentity = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
         let pathConsulta = `locations/subentity?term=${data.search}&locale=es-ES&limit=${data.limit}&sort=name&active_only=true'`;
@@ -37,7 +37,7 @@ exports.search_subentity = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
-exports.search_topdestinations = async (req, res) => {
+exports.searchTopdestinations = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
         const pathConsulta = `locations/topdestinations?term=${data.search}&locale=es-ES&limit=${data.limit}&sort=name&active_only=true&source_popularity=searches`;
@@ -145,7 +145,7 @@ exports.getBookingId = async (req, res) => {
     const textSql = `SELECT * FROM BookingFlights WHERE Id=${data.Id}`;
     request.query(textSql).then(async result => {
         if (result.recordsets[0].length == 1) {
-            const respDenario = await denarioController.credit_limit(result.recordsets[0][0].Document);
+            const respDenario = await denarioController.creditLimit(result.recordsets[0][0].Document);
             res.status(200).json({ error: false, data: Object.assign(respDenario.body, result.recordsets[0][0]) });
         } else {
             res.status(200).json({ error: true, data: 'No se encuentra el registro' });

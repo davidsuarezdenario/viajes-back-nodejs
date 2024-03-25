@@ -8,11 +8,16 @@ const authentication = { url: 'http://localhost:4370/api/', aut: 'AutWanderlustP
     const resOk = await procesosDenario('wanderlust/consultar_cupo', 'POST', { Id: data.Id});
     resOk.status == true ? res.status(200).json({ error: false, data: resOk.body }) : res.status(400).json({ error: true, data: resOk.body });
 } */
-async function credit_limit (Id){
+exports.simulateCredit = async (req, res) => {
+    const data = req.body;
+    const resOk = await procesosDenario('wanderlust/simular_solicitud', 'POST', { cedula: data.Document, monto: data.Amount});
+    resOk.status == true ? res.status(200).json({ error: false, data: resOk.body }) : res.status(400).json({ error: true, data: resOk.body });
+}
+async function creditLimit (Id){
     const resOk = await procesosDenario('wanderlust/consultar_cupo', 'POST', { cedula: Id});
     return resOk;
 }
-module.exports.credit_limit = credit_limit;
+module.exports.creditLimit = creditLimit;
 async function procesosDenario(path, method, body) {
     return new Promise((resolve, reject) => {
         let options = {};
