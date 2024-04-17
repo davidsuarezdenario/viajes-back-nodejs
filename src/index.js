@@ -16,14 +16,17 @@ app.use('/greeting', greetingRouter);
 const authRouter = require('./routes/auth');
 app.use('/auth', authRouter);
 
-const travelRouter = require('./routes/travel');
-app.use('/travel', travelRouter);
+/* const travelRouter = require('./routes/travel');
+app.use('/travel', travelRouter); */
+
+const amadeusRouter = require('./routes/amadeus');
+app.use('/travel', amadeusRouter);
 
 const denarioRouter = require('./routes/denario');
 app.use('/denario', denarioRouter);
 
 const usersRouter = require('./routes/users');
-app.use('/users',usersRouter);
+app.use('/users', usersRouter);
 
 const port = 3000;
 app.listen(port, () => {
