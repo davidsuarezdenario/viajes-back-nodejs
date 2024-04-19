@@ -22,9 +22,6 @@ app.use('/wanderlust', wanderlusRouter);
 const amadeusRouter = require('./routes/amadeus');
 app.use('/travel', amadeusRouter);
 
-/* const denarioRouter = require('./routes/denario');
-app.use('/denario', denarioRouter); */
-
 const usersRouter = require('./routes/users');
 app.use('/users', usersRouter);
 
