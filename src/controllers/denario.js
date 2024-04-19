@@ -47,7 +47,7 @@ async function creditLimit(Id) {
     const resOk = await procesosDenario('wanderlust/consultar_cupo', 'POST', { cedula: Id });
     return resOk;
 }
-module.exports.creditLimit = creditLimit;
+//module.exports.creditLimit = creditLimit;
 async function procesosDenario(path, method, body) {
     return new Promise((resolve, reject) => {
         let options = {};

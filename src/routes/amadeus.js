@@ -13,8 +13,4 @@ router.post('/booking_one', travelController.bookingStep1);
 router.post('/booking_two', travelController.bookingStep2);
 router.post('/booking_three', travelController.bookingStep3); */
 
-/* WANDERLUST */
-router.post('/save_booking', amadeusController.saveBookingId);
-router.post('/get_booking', amadeusController.getBookingId);
-
 module.exports = router;

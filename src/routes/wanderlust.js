@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const travelController = require('../controllers/travel');
+const travelController = require('../controllers/wanderlust');
 const auth = require('../middleware/jwt');
 
 /* KIWI */
