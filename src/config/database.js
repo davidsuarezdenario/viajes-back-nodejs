@@ -17,25 +17,25 @@ const dev = {
 const use = prod;
 
 const configRemote = {
-  user: use.user,
-  password: use.password,
-  server: use.server,
-  database: use.database,
-  options: {
-    encrypt: true,
-    trustServerCertificate: true
-  }
+    user: use.user,
+    password: use.password,
+    server: use.server,
+    database: use.database,
+    options: {
+        encrypt: true,
+        trustServerCertificate: true
+    }
 };
 
 const configLocal = {
-  user: use.user,
-  password: use.password,
-  server: 'localhost',
-  database: use.database,
-  options: {
-    encrypt: true,
-    trustServerCertificate: true
-  }
+    user: use.user,
+    password: use.password,
+    server: 'localhost',
+    database: use.database,
+    options: {
+        encrypt: true,
+        trustServerCertificate: true
+    }
 };
 
 let connection;
@@ -55,7 +55,7 @@ try {
             console.log('**** Conexión correcta a la base de datos local ****');
         }
     });
-} catch (error) { 
+} catch (error) {
     console.log('Error al conectar a la base de datos', error);
 }
 
