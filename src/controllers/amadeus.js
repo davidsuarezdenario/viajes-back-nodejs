@@ -8,31 +8,11 @@ const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7A
 let token = '';
 const builder = new xml2js.Builder();
 
-async function getToken() {
-    return new Promise((resolve, reject) => { const body = qs.stringify({ 'grant_type': 'client_credentials', 'client_id': 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', 'client_secret': 'N0hFslmwu3zpofYQ' }); const options = { method: 'post', url: authentication.url + 'v1/security/oauth2/token', headers: { 'Content-type': 'application/x-www-form-urlencoded' }, body: body, json: true }; requesthttp(options, async (error, response, body) => { if (error) { reject(false); } else { token = response.body.access_token; resolve(true); } }) });
-}
-async function xml2json(xml) {
-    return new Promise((resolve, reject) => {
-        const parser = new xml2js.Parser();
-        parser.parseString(xml, function (err, result) { resolve(result); });
-    });
-}
-async function json2xml(json) {
-    return new Promise((resolve, reject) => {
-        resolve(builder.buildObject(json));
-    });
-}
-
 exports.testXML = async (req, res) => {
-    const data = req.body;
-    console.log('data: ', data);
-    const jsonRes = await json2xml(data);
-    console.log('json: ', jsonRes);
-    const resOk = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', jsonRes);
-    console.log('resOk: ', resOk);
-    const resOk1 = await xml2json(resOk);
-    console.log('resOk1: ', resOk1);
-    res.status(200).json({ error: false, data: resOk1 });
+    const newXML = await json2xml(req.body);
+    const response = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', newXML);
+    const newJSON = await xml2json(response);
+    res.status(200).json({ error: false, data: newJSON });
 }
 exports.searchText = async (req, res) => {
     const data = req.body;
@@ -81,7 +61,29 @@ async function procesosAmadeusXML(path, method, body) {
         })
     });
 }
-function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); }
+/* function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); } */
+exports.xml2jsonReq = async (req, res) => {
+    const resOk = await xml2json(req.body.xml);
+    res.status(200).json({ error: false, data: resOk });
+}
+exports.json2xmlReq = async (req, res) => {
+    const resOk = await json2xml(req.body);
+    res.status(200).json({ error: false, data: resOk });
+}
+async function getToken() {
+    return new Promise((resolve, reject) => { const body = qs.stringify({ 'grant_type': 'client_credentials', 'client_id': 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', 'client_secret': 'N0hFslmwu3zpofYQ' }); const options = { method: 'post', url: authentication.url + 'v1/security/oauth2/token', headers: { 'Content-type': 'application/x-www-form-urlencoded' }, body: body, json: true }; requesthttp(options, async (error, response, body) => { if (error) { reject(false); } else { token = response.body.access_token; resolve(true); } }) });
+}
+async function xml2json(xml) {
+    return new Promise((resolve, reject) => {
+        const parser = new xml2js.Parser();
+        parser.parseString(xml, function (err, result) { resolve(result); });
+    });
+}
+async function json2xml(json) {
+    return new Promise((resolve, reject) => {
+        resolve(builder.buildObject(json));
+    });
+}
 /* const axios = require('axios');
 const xml2js = require('xml2js');
 
