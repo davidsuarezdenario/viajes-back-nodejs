@@ -6,6 +6,7 @@ const auth = require('../middleware/jwt');
 /* AMADEUS */
 router.post('/search_airport', amadeusController.searchText);
 router.post('/booking', amadeusController.booking);
+router.post('/xml', amadeusController.testXML);
 /* router.post('/search_location', travelController.searchLocation);
 router.post('/search_subentity', travelController.searchSubentity);
 router.post('/search_topdestinations', travelController.searchTopdestinations);

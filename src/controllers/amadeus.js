@@ -3,13 +3,37 @@ const hash = require('../utils/hash'); */
 //const sql = require("mssql");
 const requesthttp = require('request');
 const qs = require('qs');
+const xml2js = require('xml2js');
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
 let token = '';
+const builder = new xml2js.Builder();
 
 async function getToken() {
     return new Promise((resolve, reject) => { const body = qs.stringify({ 'grant_type': 'client_credentials', 'client_id': 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', 'client_secret': 'N0hFslmwu3zpofYQ' }); const options = { method: 'post', url: authentication.url + 'v1/security/oauth2/token', headers: { 'Content-type': 'application/x-www-form-urlencoded' }, body: body, json: true }; requesthttp(options, async (error, response, body) => { if (error) { reject(false); } else { token = response.body.access_token; resolve(true); } }) });
 }
+async function xml2json(xml) {
+    return new Promise((resolve, reject) => {
+        const parser = new xml2js.Parser();
+        parser.parseString(xml, function (err, result) { resolve(result); });
+    });
+}
+async function json2xml(json) {
+    return new Promise((resolve, reject) => {
+        resolve(builder.buildObject(json));
+    });
+}
 
+exports.testXML = async (req, res) => {
+    const data = req.body;
+    console.log('data: ', data);
+    const jsonRes = await json2xml(data);
+    console.log('json: ', jsonRes);
+    const resOk = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', jsonRes);
+    console.log('resOk: ', resOk);
+    const resOk1 = await xml2json(resOk);
+    console.log('resOk1: ', resOk1);
+    res.status(200).json({ error: false, data: resOk1 });
+}
 exports.searchText = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
@@ -41,6 +65,19 @@ async function procesosAmadeus(path, method, body) {
         }
         requesthttp(options, async (error, response, body) => {
             if (error) { reject({ error: true, data: error }); } else { resolve(JSON.parse(response.body)); }
+        })
+    });
+}
+async function procesosAmadeusXML(path, method, body) {
+    return new Promise((resolve, reject) => {
+        let options = {};
+        if (method == 'GET') {
+            options = { method: method, url: path, headers: { 'content-type': 'application/soap+xml; charset=utf-8' } };
+        } else {
+            options = { method: method, url: path, headers: { 'content-type': 'application/soap+xml; charset=utf-8' }, body: body };
+        }
+        requesthttp(options, async (error, response, body) => {
+            if (error) { reject({ error: true, data: error }); } else { resolve(response.body); }
         })
     });
 }
