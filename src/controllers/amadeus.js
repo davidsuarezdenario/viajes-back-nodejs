@@ -45,3 +45,22 @@ async function procesosAmadeus(path, method, body) {
     });
 }
 function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); }
+/* const axios = require('axios');
+const xml2js = require('xml2js');
+
+let builder = new xml2js.Builder();
+let xml = builder.buildObject({
+    'Air_SellFromRecommendation': {
+        // Aquí va el contenido de tu consulta XML
+    }
+});
+
+axios.post('URL_DEL_SERVICIO_WEB', xml, {
+    headers: { 'Content-Type': 'text/xml' }
+})
+.then(response => {
+    console.log(response.data);
+})
+.catch(error => {
+    console.error(error);
+}); */
