@@ -9,10 +9,8 @@ let token = '';
 const builder = new xml2js.Builder();
 
 exports.testXML = async (req, res) => {
-    const newXML = await json2xml(req.body);
-    const response = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', newXML);
-    const newJSON = await xml2json(response);
-    res.status(200).json({ error: false, data: newJSON });
+    const response = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', req.body);
+    res.status(200).json({ error: false, data: response });
 }
 exports.searchText = async (req, res) => {
     const data = req.body;
@@ -49,15 +47,16 @@ async function procesosAmadeus(path, method, body) {
     });
 }
 async function procesosAmadeusXML(path, method, body) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async(resolve, reject) => {
         let options = {};
+        const newXML = await json2xml(body)
         if (method == 'GET') {
             options = { method: method, url: path, headers: { 'content-type': 'application/soap+xml; charset=utf-8' } };
         } else {
-            options = { method: method, url: path, headers: { 'content-type': 'application/soap+xml; charset=utf-8' }, body: body };
+            options = { method: method, url: path, headers: { 'content-type': 'application/soap+xml; charset=utf-8' }, body: newXML };
         }
         requesthttp(options, async (error, response, body) => {
-            if (error) { reject({ error: true, data: error }); } else { resolve(response.body); }
+            if (error) { reject({ error: true, data: error }); } else { const newJSON = await xml2json(response.body); resolve(newJSON); }
         })
     });
 }
@@ -75,8 +74,7 @@ async function getToken() {
 }
 async function xml2json(xml) {
     return new Promise((resolve, reject) => {
-        const parser = new xml2js.Parser();
-        parser.parseString(xml, function (err, result) { resolve(result); });
+        const parser = new xml2js.Parser(); parser.parseString(xml, function (err, result) { resolve(result); });
     });
 }
 async function json2xml(json) {
@@ -84,22 +82,3 @@ async function json2xml(json) {
         resolve(builder.buildObject(json));
     });
 }
-/* const axios = require('axios');
-const xml2js = require('xml2js');
-
-let builder = new xml2js.Builder();
-let xml = builder.buildObject({
-    'Air_SellFromRecommendation': {
-        // Aquí va el contenido de tu consulta XML
-    }
-});
-
-axios.post('URL_DEL_SERVICIO_WEB', xml, {
-    headers: { 'Content-Type': 'text/xml' }
-})
-.then(response => {
-    console.log(response.data);
-})
-.catch(error => {
-    console.error(error);
-}); */
