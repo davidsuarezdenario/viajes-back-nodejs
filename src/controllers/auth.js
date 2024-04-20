@@ -10,8 +10,7 @@ exports.sesion = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-    const { username, password } = req.body;
-    const request = new sql.Request();
+    const { username, password } = req.body, request = new sql.Request();
     sql_str = `SELECT Pass, Documento FROM UsersLogin WHERE En=1 AND (Documento='${username}' OR Email='${username}' OR Phone='${username}')`;
     request.query(sql_str).then((object) => {
         verifLogin(object.recordset[0], res, username, password);

@@ -17,18 +17,16 @@ const verificarApiKey = async (req, res, next) => {
 };
 
 async function verifApiKeyDB(apiKey) {
-   let response = false; 
-   const request = new sql.Request();
-   sql_str = `SELECT ApiKey FROM ApiKeys WHERE ApiKey='${apiKey}' AND En=1`;
-   await request.query(sql_str)
-        .then((object) => {
-            if(object.recordset[0]){
-                response = true;
-            }
-        })
-        .catch((err) => {
-            console.log('verifApiKeyDB: ',err);
-        });
+    let response = false;
+    const request = new sql.Request();
+    sql_str = `SELECT ApiKey FROM ApiKeys WHERE ApiKey='${apiKey}' AND En=1`;
+    await request.query(sql_str).then((object) => {
+        if (object.recordset[0]) {
+            response = true;
+        }
+    }).catch((err) => {
+        console.log('verifApiKeyDB: ', err);
+    });
     return response;
 }
 
