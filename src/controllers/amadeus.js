@@ -7,6 +7,7 @@ const xml2js = require('xml2js');
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
 let token = '';
 const builder = new xml2js.Builder();
+const headerAmadeus = require('../controllers/headerAmadeus');
 
 exports.testXML = async (req, res) => {
     const response = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', req.body);
@@ -47,7 +48,7 @@ async function procesosAmadeus(path, method, body) {
     });
 }
 async function procesosAmadeusXML(path, method, body) {
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let options = {};
         const newXML = await json2xml(body)
         if (method == 'GET') {
@@ -81,4 +82,10 @@ async function json2xml(json) {
     return new Promise((resolve, reject) => {
         resolve(builder.buildObject(json));
     });
+}
+exports.header = async (req, res) => {
+    console.log('llega todo ok 1');
+    const resOk = await headerAmadeus.generateHeader();
+    console.log(resOk);
+    res.status(200).json(resOk);
 }

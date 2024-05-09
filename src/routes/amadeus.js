@@ -9,6 +9,7 @@ router.post('/booking', amadeusController.booking);
 router.post('/xml', amadeusController.testXML);
 router.post('/xml2json', amadeusController.xml2jsonReq);
 router.post('/json2xml', amadeusController.json2xmlReq);
+router.post('/header', amadeusController.header);
 /* router.post('/search_location', travelController.searchLocation);
 router.post('/search_subentity', travelController.searchSubentity);
 router.post('/search_topdestinations', travelController.searchTopdestinations);
