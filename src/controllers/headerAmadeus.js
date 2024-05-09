@@ -1,4 +1,6 @@
-const amadeus = { office_id: 'BOGZ122AR', ws_user: 'WSWPSWAN', password: 'Bj2=yu3kX5zh' };
+const { application } = require("express");
+
+const amadeus = { office_id: 'BOGZ122AR', ws_user: 'WSWPSWAN', password: 'Bj2=yu3kX5zh', company: 'WPS', application: 'WAN' };
 const base64Chars = new Array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/');
 const END_OF_INPUT = -1;
 
@@ -12,11 +14,9 @@ function getMid() {
 
 /* Generate Nonce */
 function getNonce() {
-    /* nn = randomString2(8); */
     let base64Str = '', base64Count = 0;
     function setBase64Str(str) {
-        base64Str = str;
-        base64Count = 0;
+        base64Str = str; base64Count = 0;
     }
     function readBase64() {
         if (!base64Str) return END_OF_INPUT;
@@ -51,7 +51,6 @@ function getNonce() {
         let text = ""; const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; for (var i = 0; i < len; i++)text += possible.charAt(Math.floor(Math.random() * possible.length));
         return text;
     }
-    /* nn = encodeBase64(randomString2(8)); */
     return encodeBase64(randomString2(8));
 }
 /* Generate Nonce */
@@ -69,17 +68,40 @@ function getT() {
 }
 /* Generate Current Time */
 
+/* Generate Encrypt */
+function WbsPassword(pwd, timestamp, nonceB64) {
+    var aPwd = parseHexaBytes(SHA1(pwd));
+
+    var aNonce = decode64Bytes(nonceB64);//alert(aNonce);
+    var aTime = stringToArray(timestamp);
+    var aHash = SHA1Bytes(aNonce.concat(aTime.concat(aPwd)));//alert(aHash);
+    var HshPwd = encode64Bytes(parseHexaBytes(aHash));//alert(HshPwd);
+
+    return HshPwd;
+}
+function submitEncrypt(pwd, timestamp, nonceB64) {
+    const aPwd = parseHexaBytes(SHA1(pwd));
+    const aNonce = decode64Bytes(nonceB64);
+    const aTime = stringToArray(timestamp);
+    const aHash = SHA1Bytes(aNonce.concat(aTime.concat(aPwd)));
+    const HshPwd = encode64Bytes(parseHexaBytes(aHash));
+
+    return HshPwd;
+}
+/* Generate Encrypt */
+
 function generateHeader() {
     const mid = getMid();
     const nonce = getNonce();
     const timestamp = getT();
+    submitEncrypt(amadeus.password, timestamp, nonce);
     return {
         message_id: mid,
         nonce: nonce,
         timestamp: timestamp,
         digest: '',
-        company: '',
-        application: ''
+        company: amadeus.company,
+        application: amadeus.application
     };
 }
 module.exports.generateHeader = generateHeader;
