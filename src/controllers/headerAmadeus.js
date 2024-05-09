@@ -59,28 +59,24 @@ function getNonce() {
 /* Generate Current Time */
 function getT() {
     const now = new Date();
-    const year = now.getUTCFullYear();
-    /* const month = (now.getUTCMonth() + 1)  if (month < 10) { month = "0" + month.toString(); } */
     const month = (now.getUTCMonth() + 1) < 10 ? "0" + (now.getUTCMonth() + 1).toString() : (now.getUTCMonth() + 1);
-    /* const date = now.getUTCDate(); if (date < 10) { date = "0" + date.toString(); } */
     const date = now.getUTCDate() < 10 ? "0" + (now.getUTCDate()).toString() : now.getUTCDate();
-    let hour = now.getUTCHours(); if (hour < 10) { hour = "0" + hour.toString(); }
-    let min = now.getUTCMinutes(); if (min < 10) { min = "0" + min.toString(); }
-    let sec = now.getUTCSeconds(); if (sec < 10) { sec = "0" + sec.toString(); }
-    let msec = now.getMilliseconds(); if (msec < 10) { msec = "00" + msec.toString(); } if (msec < 100) { msec = "0" + msec.toString(); }
-    let currentTimeSting = year + "-" + month + "-" + date + "T" + hour + ":" + min + ":" + sec + ":" + msec + "Z";
-    console.log(currentTimeSting);
+    const hour = now.getUTCHours() < 10 ? "0" + (now.getUTCHours()).toString() : now.getUTCHours();
+    const min = now.getUTCMinutes() < 10 ? "0" + (now.getUTCMinutes()).toString() : now.getUTCMinutes();
+    const sec = now.getUTCSeconds() < 10 ? "0" + (now.getUTCSeconds()).toString() : now.getUTCSeconds();
+    const msec = now.getMilliseconds() < 10 ? "00" + (now.getMilliseconds()).toString() : (now.getMilliseconds() < 100 ? "0" + now.getMilliseconds().toString() : now.getMilliseconds());
+    return now.getUTCFullYear() + "-" + month + "-" + date + "T" + hour + ":" + min + ":" + sec + ":" + msec + "Z";
 }
 /* Generate Current Time */
 
 function generateHeader() {
     const mid = getMid();
     const nonce = getNonce();
-    getT();
+    const timestamp = getT();
     return {
         message_id: mid,
         nonce: nonce,
-        timestamp: '',
+        timestamp: timestamp,
         digest: '',
         company: '',
         application: ''
