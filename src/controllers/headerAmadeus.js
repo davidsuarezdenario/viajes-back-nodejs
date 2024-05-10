@@ -1,4 +1,4 @@
-const amadeus = { office_id: 'BOGZ122AR', ws_user: 'WSWPSWAN', password: 'Bj2=yu3kX5zh', company: 'WPS', application: 'WAN' };
+const amadeus = { wsdl: '1ASIWWANWPS', office_id: 'BOGZ122AR', ws_user: 'WSWPSWAN', password: 'Bj2=yu3kX5zh', company: 'WPS', application: 'WAN' };
 const base64Chars = new Array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/');
 const keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 const END_OF_INPUT = -1;
@@ -264,23 +264,7 @@ function generateHeader(data) {
     const nonce = getNonce();
     const timestamp = getT();
     const digest = WbsPassword(amadeus.password, timestamp, nonce);
-    const header = `<soapenv:Header>
-\t<add:MessageID xmlns:add=\"http://www.w3.org/2005/08/addressing\">${mid}</add:MessageID>
-\t<add:Action xmlns:add=\"http://www.w3.org/2005/08/addressing\">${data}</add:Action>
-\t<add:To xmlns:add=\"http://www.w3.org/2005/08/addressing\">https://nodeD1.test.webservices.amadeus.com/1ASIW${amadeus.application}${amadeus.company}</add:To>
-\t<link:TransactionFlowLink xmlns:link=\"http://wsdl.amadeus.com/2010/06/ws/Link_v1\"/>
-\t<oas:Security xmlns:oas=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">
-\t\t<oas:UsernameToken oas1:Id=\"UsernameToken-1\" xmlns:oas1=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">
-\t\t\t<oas:Username>${amadeus.ws_user}</oas:Username>
-\t\t\t<oas:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">${nonce}</oas:Nonce>
-\t\t\t<oas:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">${digest}</oas:Password>
-\t\t\t<oas1:Created>${timestamp}</oas1:Created>
-\t\t</oas:UsernameToken>
-\t</oas:Security>
-\t<AMA_SecurityHostedUser xmlns=\"http://xml.amadeus.com/2010/06/Security_v1\">
-\t\t<UserID AgentDutyCode=\"SU\" RequestorType=\"U\" PseudoCityCode=\"${amadeus.office_id}\" POS_Type=\"1\"/>
-\t</AMA_SecurityHostedUser>
-</soapenv:Header>`;
+    const header = `<soapenv:Header><add:MessageID xmlns:add=\"http://www.w3.org/2005/08/addressing\">${mid}</add:MessageID><add:Action xmlns:add=\"http://www.w3.org/2005/08/addressing\">${data}</add:Action><add:To xmlns:add=\"http://www.w3.org/2005/08/addressing\">https://nodeD1.test.webservices.amadeus.com/${amadeus.wsdl}</add:To><link:TransactionFlowLink xmlns:link=\"http://wsdl.amadeus.com/2010/06/ws/Link_v1\"/><oas:Security xmlns:oas=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><oas:UsernameToken oas1:Id=\"UsernameToken-1\" xmlns:oas1=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"><oas:Username>${amadeus.ws_user}</oas:Username><oas:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">${nonce}</oas:Nonce><oas:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">${digest}</oas:Password><oas1:Created>${timestamp}</oas1:Created></oas:UsernameToken></oas:Security><AMA_SecurityHostedUser xmlns=\"http://xml.amadeus.com/2010/06/Security_v1\"><UserID AgentDutyCode=\"SU\" RequestorType=\"U\" PseudoCityCode=\"${amadeus.office_id}\" POS_Type=\"1\"/></AMA_SecurityHostedUser></soapenv:Header>`;
     return header;
     /* return {
         message_id: mid,

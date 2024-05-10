@@ -4,9 +4,10 @@ const hash = require('../utils/hash'); */
 const requesthttp = require('request');
 const qs = require('qs');
 const xml2js = require('xml2js');
+const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
+let token = '';
 const builder = new xml2js.Builder();
 const headerAmadeus = require('../controllers/headerAmadeus');
-const deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 
 exports.testXML = async (req, res) => {
     const response = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', req.body);
@@ -26,21 +27,35 @@ exports.searchText = async (req, res) => {
 }
 exports.booking = async (req, res) => {
     console.log(req.body);
-    const body = req.body;
-    const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body, 'http://webservices.amadeus.com/FMPTBQ_23_1_1A');
-    /* console.log(resOk); */
+    /* v2/shopping/flight-offers?originLocationCode=PAR&destinationLocationCode=ICN&departureDate={{departureDate}}&returnDate={{returnDate}}&adults=2&max=5 */
+    const arreglo = Object.entries(req.body); let pathConsulta = 'v2/shopping/flight-offers?nonStop=false&currencyCode=COP&';
+    for (dato of arreglo) { pathConsulta += `&${dato[0]}=${dato[1]}`; }
+    let resOk = await procesosAmadeus(pathConsulta, 'GET', {});
+    if (resOk.errors) { await getToken(); resOk = await procesosAmadeus(pathConsulta, 'GET', {}); }
     res.status(200).json({ error: false, data: resOk });
 }
-async function procesosAmadeusXML(path, method, body, action) {
+async function procesosAmadeus(path, method, body) {
+    return new Promise((resolve, reject) => {
+        let options = {};
+        if (method == 'GET') {
+            options = { method: method, url: authentication.url + path, headers: { accept: 'application/json', 'content-type': 'application/json', 'Authorization': 'Bearer ' + token } };
+        } else {
+            options = { method: method, url: authentication.url + path, headers: { accept: 'application/json', 'content-type': 'application/json', 'Authorization': 'Bearer ' + token }, body: body, json: true };
+        }
+        requesthttp(options, async (error, response, body) => {
+            if (error) { reject({ error: true, data: error }); } else { resolve(JSON.parse(response.body)); }
+        })
+    });
+}
+async function procesosAmadeusXML(path, method, body) {
     return new Promise(async (resolve, reject) => {
         let options = {};
         const newXML = await json2xml(body)
-        const headerOk = await headerAmadeus.generateHeader('http://webservices.amadeus.com/FMPTBQ_23_1_1A');
-        const envelop = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:typ="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iat="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:app="http://xml.amadeus.com/2010/06/AppMdw_CommonTypes_v3" xmlns:link="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:ses="http://xml.amadeus.com/2010/06/Session_v3">${headerOk}${newXML}</soapenv:Envelope>`;
+        const resOk = await headerAmadeus.generateHeader('http://webservices.amadeus.com/FMPTBQ_23_1_1A');
         if (method == 'GET') {
-            options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': action } };
+            options = { method: method, url: path, headers: { 'content-type': 'application/soap+xml; charset=utf-8' } };
         } else {
-            options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': action }, body: envelop };
+            options = { method: method, url: path, headers: { 'content-type': 'application/soap+xml; charset=utf-8' }, body: newXML };
         }
         requesthttp(options, async (error, response, body) => {
             if (error) { reject({ error: true, data: error }); } else { const newJSON = await xml2json(response.body); resolve(newJSON); }
@@ -66,7 +81,7 @@ async function xml2json(xml) {
 }
 async function json2xml(json) {
     return new Promise((resolve, reject) => {
-        resolve((builder.buildObject(json)).replace(deleteText, ''));
+        resolve(builder.buildObject(json));
     });
 }
 exports.header = async (req, res) => {
