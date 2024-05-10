@@ -85,7 +85,7 @@ async function json2xml(json) {
 }
 exports.header = async (req, res) => {
     console.log('llega todo ok 1');
-    const resOk = await headerAmadeus.generateHeader();
+    const resOk = await headerAmadeus.generateHeader(req.body.action);
     console.log(resOk);
     res.status(200).json(resOk);
 }

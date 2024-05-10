@@ -255,23 +255,40 @@ function WbsPassword(pwd, timestamp, nonceB64) {
     const aTime = stringToArray(timestamp);
     const aHash = SHA1Bytes(aNonce.concat(aTime.concat(aPwd)));
     const HshPwd = encode64Bytes(parseHexaBytes(aHash));
-
     return HshPwd;
 }
 /* Generate Encrypt */
 
-function generateHeader() {
+function generateHeader(data) {
     const mid = getMid();
     const nonce = getNonce();
     const timestamp = getT();
     const digest = WbsPassword(amadeus.password, timestamp, nonce);
-    return {
+    const header = `<soapenv:Header>
+\t<add:MessageID xmlns:add=\"http://www.w3.org/2005/08/addressing\">${mid}</add:MessageID>
+\t<add:Action xmlns:add=\"http://www.w3.org/2005/08/addressing\">${data}</add:Action>
+\t<add:To xmlns:add=\"http://www.w3.org/2005/08/addressing\">https://nodeD1.test.webservices.amadeus.com/1ASIW${amadeus.application}${amadeus.company}</add:To>
+\t<link:TransactionFlowLink xmlns:link=\"http://wsdl.amadeus.com/2010/06/ws/Link_v1\"/>
+\t<oas:Security xmlns:oas=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">
+\t\t<oas:UsernameToken oas1:Id=\"UsernameToken-1\" xmlns:oas1=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">
+\t\t\t<oas:Username>${amadeus.ws_user}</oas:Username>
+\t\t\t<oas:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">${nonce}</oas:Nonce>
+\t\t\t<oas:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">${digest}</oas:Password>
+\t\t\t<oas1:Created>${timestamp}</oas1:Created>
+\t\t</oas:UsernameToken>
+\t</oas:Security>
+\t<AMA_SecurityHostedUser xmlns=\"http://xml.amadeus.com/2010/06/Security_v1\">
+\t\t<UserID AgentDutyCode=\"SU\" RequestorType=\"U\" PseudoCityCode=\"${amadeus.office_id}\" POS_Type=\"1\"/>
+\t</AMA_SecurityHostedUser>
+</soapenv:Header>`;
+    return header;
+    /* return {
         message_id: mid,
         nonce: nonce,
         timestamp: timestamp,
         digest: digest,
         company: amadeus.company,
         application: amadeus.application
-    };
+    }; */
 }
 module.exports.generateHeader = generateHeader;
