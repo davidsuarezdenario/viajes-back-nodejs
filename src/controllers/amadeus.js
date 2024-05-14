@@ -25,22 +25,28 @@ exports.searchText = async (req, res) => {
     }
 }
 exports.booking = async (req, res) => {
-    console.log(req.body);
     const body = req.body;
-    const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body, 'http://webservices.amadeus.com/FMPTBQ_23_1_1A');
+    console.log('body: ', body);
+    const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, body.action, body.stateful);
+    /* if(body.stateful == false){
+        resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, body.action, body.stateful);
+    } else {
+        resOk = 'No se puede realizar la reserva porque el estado es true'
+    } */
     /* console.log(resOk); */
     res.status(200).json({ error: false, data: resOk });
 }
-async function procesosAmadeusXML(path, method, body, action) {
+async function procesosAmadeusXML(path, method, body, action, type) {
     return new Promise(async (resolve, reject) => {
         let options = {};
         const newXML = await json2xml(body)
-        const headerOk = await headerAmadeus.generateHeader('http://webservices.amadeus.com/FMPTBQ_23_1_1A');
+        const headerOk = type == false ? await headerAmadeus.generateHeader(action) : await headerAmadeus.generateHeaderStateful(action);
         const envelop = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:typ="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iat="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:app="http://xml.amadeus.com/2010/06/AppMdw_CommonTypes_v3" xmlns:link="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:ses="http://xml.amadeus.com/2010/06/Session_v3">${headerOk}${newXML}</soapenv:Envelope>`;
+        console.log('envelop: ', envelop);
         if (method == 'GET') {
-            options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': action } };
+            options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': `http://webservices.amadeus.com/${action}` } };
         } else {
-            options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': action }, body: envelop };
+            options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': `http://webservices.amadeus.com/${action}` }, body: envelop };
         }
         requesthttp(options, async (error, response, body) => {
             if (error) { reject({ error: true, data: error }); } else { const newJSON = await xml2json(response.body); resolve(newJSON); }
