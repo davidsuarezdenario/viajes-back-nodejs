@@ -18,20 +18,16 @@ exports.searchText = async (req, res) => {
 }
 exports.booking1 = async (req, res) => {
     const body = req.body;
-    console.log('body: ', body);
     const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, 'FMPTBQ_23_1_1A', 0);
-    /* if(body.stateful == false){
-        resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, body.action, body.stateful);
-    } else {
-        resOk = 'No se puede realizar la reserva porque el estado es true'
-    } */
-    /* console.log(resOk); */
-    /* res.status(200).json({ error: false, data: await xml2json(resOk) }); */
     res.status(200).json({ error: false, data: resOk });
 }
 exports.booking2 = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, 'TIPNRQ_23_1_1A', 1, {});
+    console.log('resOk: ', resOk['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]);
+    const session = resOk['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0];
+    /* const body1 = { "soapenv:Body": { "Fare_CheckRules": [ { "msgType": [ { "messageFunctionDetails": [ { "messageFunction": [ "712" ] } ] } ], "itemNumber": [ { "itemNumberDetails": [ { "number": [ "1" ] } ] } ] } ] } };
+    const resOk1 = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body1, 'FARQNQ_07_1_1A', 2, { SessionId: '', sequenceNumber: 0, securityToken: '' }); */
     res.status(200).json({ error: false, data: resOk });
 }
 exports.booking3 = async (req, res) => {

@@ -275,9 +275,9 @@ function generateHeaderStateful(data, type, session) {
     <add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/TIPNRQ_23_1_1A</add:Action>
     <add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS</add:To>
 	<awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3">
-		<awsse:SessionId>002OA2OCV3</awsse:SessionId>
-		<awsse:SequenceNumber>2</awsse:SequenceNumber>
-		<awsse:SecurityToken>2U442Q5ILXUK6QQBAWDANYRVZ</awsse:SecurityToken>
+		<awsse:SessionId>${session.sessionId}</awsse:SessionId>
+		<awsse:SequenceNumber>${session.sequenceNumber}</awsse:SequenceNumber>
+		<awsse:SecurityToken>${session.securityToken}</awsse:SecurityToken>
 	</awsse:Session>
     ${data}
 </soapenv:Header>`;
