@@ -259,26 +259,27 @@ function WbsPassword(pwd, timestamp, nonceB64) {
 }
 /* Generate Encrypt */
 
-function generateHeader(data) {
+function generateHeader(data, type) {
     /* no sataeful o start */
-    const mid = getMid();
-    const nonce = getNonce();
-    const timestamp = getT();
+    const mid = getMid(), nonce = getNonce(), timestamp = getT();
     const digest = WbsPassword(amadeus.password, timestamp, nonce);
-    const header = `<soapenv:Header><add:MessageID xmlns:add=\"http://www.w3.org/2005/08/addressing\">${mid}</add:MessageID><add:Action xmlns:add=\"http://www.w3.org/2005/08/addressing\">http://webservices.amadeus.com/${data}</add:Action><add:To xmlns:add=\"http://www.w3.org/2005/08/addressing\">https://nodeD1.test.webservices.amadeus.com/${amadeus.wsdl}</add:To><link:TransactionFlowLink xmlns:link=\"http://wsdl.amadeus.com/2010/06/ws/Link_v1\"/><oas:Security xmlns:oas=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><oas:UsernameToken oas1:Id=\"UsernameToken-1\" xmlns:oas1=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"><oas:Username>${amadeus.ws_user}</oas:Username><oas:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">${nonce}</oas:Nonce><oas:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">${digest}</oas:Password><oas1:Created>${timestamp}</oas1:Created></oas:UsernameToken></oas:Security><AMA_SecurityHostedUser xmlns=\"http://xml.amadeus.com/2010/06/Security_v1\"><UserID AgentDutyCode=\"SU\" RequestorType=\"U\" PseudoCityCode=\"${amadeus.office_id}\" POS_Type=\"1\"/></AMA_SecurityHostedUser></soapenv:Header>`;
-    return header;
-    /* return {
-        message_id: mid,
-        nonce: nonce,
-        timestamp: timestamp,
-        digest: digest,
-        company: amadeus.company,
-        application: amadeus.application
-    }; */
+    const lastLine = type == 0 ? '' : '<awsse:Session TransactionStatusCode="Start" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3"/>';
+    return `<soapenv:Header><add:MessageID xmlns:add=\"http://www.w3.org/2005/08/addressing\">${mid}</add:MessageID><add:Action xmlns:add=\"http://www.w3.org/2005/08/addressing\">http://webservices.amadeus.com/${data}</add:Action><add:To xmlns:add=\"http://www.w3.org/2005/08/addressing\">https://nodeD1.test.webservices.amadeus.com/${amadeus.wsdl}</add:To><link:TransactionFlowLink xmlns:link=\"http://wsdl.amadeus.com/2010/06/ws/Link_v1\"/><oas:Security xmlns:oas=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><oas:UsernameToken oas1:Id=\"UsernameToken-1\" xmlns:oas1=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"><oas:Username>${amadeus.ws_user}</oas:Username><oas:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">${nonce}</oas:Nonce><oas:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">${digest}</oas:Password><oas1:Created>${timestamp}</oas1:Created></oas:UsernameToken></oas:Security><AMA_SecurityHostedUser xmlns=\"http://xml.amadeus.com/2010/06/Security_v1\"><UserID AgentDutyCode=\"SU\" RequestorType=\"U\" PseudoCityCode=\"${amadeus.office_id}\" POS_Type=\"1\"/></AMA_SecurityHostedUser>${lastLine}</soapenv:Header>`;;
 }
 module.exports.generateHeader = generateHeader;
-function generateHeaderStateful(data) {
+function generateHeaderStateful(data, type, session) {
+    const lastLine = type == 2 ? 'InSeries' : 'End';
     /* in session o end */
-    return 'dddsdljsngiosngaiueongseiutlni'
+    return `<soapenv:Header>
+    <add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">00ffa81b-7176-b9d5-898b-9bc51050faab</add:MessageID>
+    <add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/TIPNRQ_23_1_1A</add:Action>
+    <add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS</add:To>
+	<awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3">
+		<awsse:SessionId>002OA2OCV3</awsse:SessionId>
+		<awsse:SequenceNumber>2</awsse:SequenceNumber>
+		<awsse:SecurityToken>2U442Q5ILXUK6QQBAWDANYRVZ</awsse:SecurityToken>
+	</awsse:Session>
+    ${data}
+</soapenv:Header>`;
 }
 module.exports.generateHeaderStateful = generateHeaderStateful;
