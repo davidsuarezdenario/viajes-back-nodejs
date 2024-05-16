@@ -272,14 +272,13 @@ function generateHeaderStateful(data, type, session) {
     /* in session o end */
     return `<soapenv:Header>
     <add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">00ffa81b-7176-b9d5-898b-9bc51050faab</add:MessageID>
-    <add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/TIPNRQ_23_1_1A</add:Action>
+    <add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/${data}</add:Action>
     <add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS</add:To>
 	<awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3">
-		<awsse:SessionId>${session.sessionId}</awsse:SessionId>
+		<awsse:SessionId>${session.SessionId}</awsse:SessionId>
 		<awsse:SequenceNumber>${session.sequenceNumber}</awsse:SequenceNumber>
 		<awsse:SecurityToken>${session.securityToken}</awsse:SecurityToken>
 	</awsse:Session>
-    ${data}
 </soapenv:Header>`;
 }
 module.exports.generateHeaderStateful = generateHeaderStateful;

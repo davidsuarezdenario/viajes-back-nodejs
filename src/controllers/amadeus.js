@@ -18,31 +18,36 @@ exports.searchText = async (req, res) => {
 }
 exports.booking1 = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, 'FMPTBQ_23_1_1A', 0);
+    const resOk = await procesosAmadeusXML('POST', body.data, 'FMPTBQ_23_1_1A', 0);
     res.status(200).json({ error: false, data: resOk });
 }
 exports.booking2 = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, 'TIPNRQ_23_1_1A', 1, {});
-    console.log('resOk: ', resOk['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]);
+    const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 1, {});
     const session = resOk['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0];
-    /* const body1 = { "soapenv:Body": { "Fare_CheckRules": [ { "msgType": [ { "messageFunctionDetails": [ { "messageFunction": [ "712" ] } ] } ], "itemNumber": [ { "itemNumberDetails": [ { "number": [ "1" ] } ] } ] } ] } };
-    const resOk1 = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body1, 'FARQNQ_07_1_1A', 2, { SessionId: '', sequenceNumber: 0, securityToken: '' }); */
-    res.status(200).json({ error: false, data: resOk });
+    /* console.log('session: ', session); */
+    const body1 = { "soapenv:Body": { "Fare_CheckRules": [{ "msgType": [{ "messageFunctionDetails": [{ "messageFunction": ["712"] }] }], "itemNumber": [{ "itemNumberDetails": [{ "number": ["1"] }] }] }] } };
+    const resOk1 = await procesosAmadeusXML('POST', body1, 'FARQNQ_07_1_1A', 2, { SessionId: session['awsse:SessionId'][0], sequenceNumber: 2, securityToken: session['awsse:SecurityToken'][0] });
+    /* console.log('resOk1: ', resOk1); */
+    const resOk2 = await procesosAmadeusXML('POST', {}, 'VLSSOQ_04_1_1A', 3, { SessionId: session['awsse:SessionId'][0], sequenceNumber: 2, securityToken: session['awsse:SecurityToken'][0] });
+    /* console.log('resOk2: ', resOk2); */
+    res.status(200).json({ error: false, data: resOk2 });
 }
 exports.booking3 = async (req, res) => {
-    const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, body.action, body.stateful);
+    const resOk = await procesosAmadeusXML('POST', body.data, body.action, body.stateful);
     res.status(200).json({ error: false, data: resOk });
 }
 exports.booking4 = async (req, res) => {
-    const resOk = await procesosAmadeusXML('https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS', 'POST', body.data, body.action, body.stateful);
+    const resOk = await procesosAmadeusXML('POST', body.data, body.action, body.stateful);
     res.status(200).json({ error: false, data: resOk });
 }
-async function procesosAmadeusXML(path, method, body, action, type, session) {
+async function procesosAmadeusXML(method, body, action, type, session) {
     return new Promise(async (resolve, reject) => {
         let options = {};
-        const newXML = await json2xml(body);
+        const path = 'https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS';
+        const newXML = type == 3 ? `<soapenv:Body> <Security_SignOut xmlns="http://xml.amadeus.com/${action}"></Security_SignOut> </soapenv:Body>` : await json2xml(body);
         const headerOk = type < 2 ? await headerAmadeus.generateHeader(action, type) : await headerAmadeus.generateHeaderStateful(action, type, session);
+        /* console.log('headerOk: ', headerOk); */
         const envelop = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:typ="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iat="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:app="http://xml.amadeus.com/2010/06/AppMdw_CommonTypes_v3" xmlns:link="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:ses="http://xml.amadeus.com/2010/06/Session_v3">${headerOk}${newXML}</soapenv:Envelope>`;
         /* resolve(envelop); */
         /* console.log('envelop: ', envelop); */
