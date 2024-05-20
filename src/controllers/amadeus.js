@@ -7,14 +7,29 @@ const xml2js = require('xml2js');
 const builder = new xml2js.Builder();
 const headerAmadeus = require('../controllers/headerAmadeus');
 const deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
+let token = '';
 
 exports.testXML = async (req, res) => {
     const response = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', req.body);
     res.status(200).json({ error: false, data: response });
 }
-exports.searchText = async (req, res) => {
+exports.searchText1 = async (req, res) => {
     const data = req.body;
     res.end();
+}
+exports.searchText = async (req, res) => {
+    const data = req.body;
+    console.log('data: ', data);
+    if (data.search != '' && data.search != undefined) {
+        let pathConsulta = `v1/reference-data/locations?keyword=${data.search}&page[limit]=${data.limit}&page[offset]=0&sort=analytics.travelers.score&view=LIGHT`;
+        if (data.location_types) { for (dato of data.location_types) { pathConsulta += `&subType=${dato}`; } } else { pathConsulta += `&subType=airport`; }
+        let resOk = await procesosAmadeus(pathConsulta, 'GET', {});
+        if (resOk.errors) await getToken(); resOk = await procesosAmadeus(pathConsulta, 'GET', {});
+        resOk.errors ? res.status(200).json({ error: true, data: resOk }) : res.status(200).json({ error: false, data: resOk });
+    } else {
+        res.status(400).json({ error: true, data: 'No se recibe texto' });
+    }
 }
 exports.booking1 = async (req, res) => {
     const body = req.body;
@@ -57,7 +72,23 @@ async function procesosAmadeusXML(method, body, action, type, session) {
             options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': `http://webservices.amadeus.com/${action}` }, body: envelop };
         }
         requesthttp(options, async (error, response, body) => {
-            if (error) { reject({ error: true, data: error }); } else { console.log(response.body); const newJSON = await xml2json(response.body); resolve(newJSON); }
+            if (error) { reject({ error: true, data: error }); } else { const newJSON = await xml2json(response.body); console.log((newJSON)); resolve(newJSON); }
+        })
+    });
+}
+async function getToken() {
+    return new Promise((resolve, reject) => { const body = qs.stringify({ 'grant_type': 'client_credentials', 'client_id': 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', 'client_secret': 'N0hFslmwu3zpofYQ' }); const options = { method: 'post', url: authentication.url + 'v1/security/oauth2/token', headers: { 'Content-type': 'application/x-www-form-urlencoded' }, body: body, json: true }; requesthttp(options, async (error, response, body) => { if (error) { reject(false); } else { token = response.body.access_token; resolve(true); } }) });
+}
+async function procesosAmadeus(path, method, body) {
+    return new Promise((resolve, reject) => {
+        let options = {};
+        if (method == 'GET') {
+            options = { method: method, url: authentication.url + path, headers: { accept: 'application/json', 'content-type': 'application/json', 'Authorization': 'Bearer ' + token } };
+        } else {
+            options = { method: method, url: authentication.url + path, headers: { accept: 'application/json', 'content-type': 'application/json', 'Authorization': 'Bearer ' + token }, body: body, json: true };
+        }
+        requesthttp(options, async (error, response, body) => {
+            if (error) { reject({ error: true, data: error }); } else { resolve(JSON.parse(response.body)); }
         })
     });
 }
