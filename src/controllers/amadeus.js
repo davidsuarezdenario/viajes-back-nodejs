@@ -13,7 +13,7 @@ let token = '';
 exports.iataCodes = async (req, res) => {
     const request = new sql.Request();
     await request.query(`SELECT * FROM IataCodesPlaces WHERE available=1`).then((object) => {
-        res.status(200).json({ error: true, data: object.recordset })
+        res.status(200).json({ error: false, data: object.recordset })
     }).catch((err) => {
         res.status(400).json({ error: true, data: err });
     });
