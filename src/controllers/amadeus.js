@@ -1,6 +1,6 @@
 /* const jwt = require('jsonwebtoken');
 const hash = require('../utils/hash'); */
-//const sql = require("mssql");
+const sql = require("mssql");
 const requesthttp = require('request');
 const qs = require('qs');
 const xml2js = require('xml2js');
@@ -10,33 +10,20 @@ const deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
 let token = '';
 
-exports.testXML = async (req, res) => {
-    const response = await procesosAmadeusXML('https://www.dataaccess.com/webservicesserver/NumberConversion.wso', 'POST', req.body);
-    res.status(200).json({ error: false, data: response });
+exports.iataCodes = async (req, res) => {
+    const request = new sql.Request();
+    await request.query(`SELECT * FROM IataCodesPlaces WHERE available=1`).then((object) => {
+        res.status(200).json({ error: true, data: object.recordset })
+    }).catch((err) => {
+        res.status(400).json({ error: true, data: err });
+    });
 }
-exports.searchText1 = async (req, res) => {
-    const data = req.body;
-    res.end();
-}
-exports.searchText = async (req, res) => {
-    const data = req.body;
-    console.log('data: ', data);
-    if (data.search != '' && data.search != undefined) {
-        let pathConsulta = `v1/reference-data/locations?keyword=${data.search}&page[limit]=${data.limit}&page[offset]=0&sort=analytics.travelers.score&view=LIGHT`;
-        if (data.location_types) { for (dato of data.location_types) { pathConsulta += `&subType=${dato}`; } } else { pathConsulta += `&subType=airport`; }
-        let resOk = await procesosAmadeus(pathConsulta, 'GET', {});
-        if (resOk.errors) await getToken(); resOk = await procesosAmadeus(pathConsulta, 'GET', {});
-        resOk.errors ? res.status(200).json({ error: true, data: resOk }) : res.status(200).json({ error: false, data: resOk });
-    } else {
-        res.status(400).json({ error: true, data: 'No se recibe texto' });
-    }
-}
-exports.booking1 = async (req, res) => {
+exports.booking1 = async (req, res) => { //Fare_MasterPricerTravelBoardSearch
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'FMPTBQ_23_1_1A', 0);
     res.status(200).json({ error: false, data: resOk });
 }
-exports.booking2 = async (req, res) => {
+exports.booking2 = async (req, res) => { //Fare_InformativePricingWithoutPNR
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 1, {});
     const session = resOk['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0];

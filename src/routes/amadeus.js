@@ -4,7 +4,7 @@ const amadeusController = require('../controllers/amadeus');
 const auth = require('../middleware/jwt');
 
 /* AMADEUS */
-router.post('/search_airport', amadeusController.searchText);
+router.get('/iata_codes', amadeusController.iataCodes);
 router.post('/booking', amadeusController.booking1);
 router.post('/booking_2', amadeusController.booking2);
 
