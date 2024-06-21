@@ -19,42 +19,43 @@ exports.iataCodes = async (req, res) => {
 exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'FMPTBQ_23_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk });
+    console.log('body: ', body);
+    const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 0, body.session);
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Air_SellFromRecommendation = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 0, {});
-    res.status(200).json({ error: false, data: resOk });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.PNR_AddMultiElements = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'TFOPCQ_19_2_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Fare_PricePNRWithBookingClass = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'TPCBRQ_23_2_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Ticket_CreateTSTFromPricing = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'TAUTCQ_04_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Security_SignOut = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'VLSSOQ_04_1_1A', 3, {});
-    res.status(200).json({ error: false, data: resOk });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 //Funciones globales
 async function procesosAmadeusXML(method, body, action, type, session) {
@@ -64,7 +65,7 @@ async function procesosAmadeusXML(method, body, action, type, session) {
         const newXML = type == 3 ? `<soapenv:Body> <Security_SignOut xmlns="http://xml.amadeus.com/${action}"></Security_SignOut> </soapenv:Body>` : await json2xml(body);
         const headerOk = type < 2 ? await headerAmadeus.generateHeader(action, type) : await headerAmadeus.generateHeaderStateful(action, type, session);
         /* console.log('headerOk: ', headerOk); */
-        const envelop = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:typ="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iat="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:app="http://xml.amadeus.com/2010/06/AppMdw_CommonTypes_v3" xmlns:link="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:ses="http://xml.amadeus.com/2010/06/Session_v3">${headerOk}${newXML}</soapenv:Envelope>`;
+        const envelop = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:typ="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iat="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:app="http://xml.amadeus.com/2010/06/AppMdw_CommonTypes_v3" xmlns:link="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:ses="http://xml.amadeus.com/2010/06/Session_v3">${headerOk.header}${newXML}</soapenv:Envelope>`;
         /* resolve(envelop); */
         /* console.log('envelop: ', envelop); */
         if (method == 'GET') {
@@ -73,7 +74,14 @@ async function procesosAmadeusXML(method, body, action, type, session) {
             options = { method: method, url: path, headers: { 'content-type': 'text/xml', 'POST': 'https://nodeD1.test.webservices.amadeus.com/HTTP/1.1', 'SOAPAction': `http://webservices.amadeus.com/${action}` }, body: envelop };
         }
         requesthttp(options, async (error, response, body) => {
-            if (error) { reject({ error: true, data: error }); } else { const newJSON = await xml2json(response.body); console.log((newJSON)); resolve(newJSON); }
+            if (error) { 
+                reject({ error: true, data: error }); 
+            } else { 
+                const newJSON = await xml2json(response.body); 
+                console.log(newJSON); 
+                headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0]; headerOk.dataOut.sequenceNumber = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]; headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0]; headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
+                resolve({ newJSON: newJSON, dataOut: headerOk.dataOut }); 
+            }
         })
     });
 }

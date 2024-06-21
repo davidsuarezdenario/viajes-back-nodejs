@@ -264,21 +264,22 @@ function generateHeader(data, type) {
     const mid = getMid(), nonce = getNonce(), timestamp = getT();
     const digest = WbsPassword(amadeus.password, timestamp, nonce);
     const lastLine = type == 0 ? '' : '<awsse:Session TransactionStatusCode="Start" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3"/>';
-    return `<soapenv:Header><add:MessageID xmlns:add=\"http://www.w3.org/2005/08/addressing\">${mid}</add:MessageID><add:Action xmlns:add=\"http://www.w3.org/2005/08/addressing\">http://webservices.amadeus.com/${data}</add:Action><add:To xmlns:add=\"http://www.w3.org/2005/08/addressing\">https://nodeD1.test.webservices.amadeus.com/${amadeus.wsdl}</add:To><link:TransactionFlowLink xmlns:link=\"http://wsdl.amadeus.com/2010/06/ws/Link_v1\"/><oas:Security xmlns:oas=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><oas:UsernameToken oas1:Id=\"UsernameToken-1\" xmlns:oas1=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"><oas:Username>${amadeus.ws_user}</oas:Username><oas:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">${nonce}</oas:Nonce><oas:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">${digest}</oas:Password><oas1:Created>${timestamp}</oas1:Created></oas:UsernameToken></oas:Security><AMA_SecurityHostedUser xmlns=\"http://xml.amadeus.com/2010/06/Security_v1\"><UserID AgentDutyCode=\"SU\" RequestorType=\"U\" PseudoCityCode=\"${amadeus.office_id}\" POS_Type=\"1\"/></AMA_SecurityHostedUser>${lastLine}</soapenv:Header>`;;
+    return { dataOut: { mid: mid }, header: `<soapenv:Header><add:MessageID xmlns:add=\"http://www.w3.org/2005/08/addressing\">${mid}</add:MessageID><add:Action xmlns:add=\"http://www.w3.org/2005/08/addressing\">http://webservices.amadeus.com/${data}</add:Action><add:To xmlns:add=\"http://www.w3.org/2005/08/addressing\">https://nodeD1.test.webservices.amadeus.com/${amadeus.wsdl}</add:To><link:TransactionFlowLink xmlns:link=\"http://wsdl.amadeus.com/2010/06/ws/Link_v1\"/><oas:Security xmlns:oas=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><oas:UsernameToken oas1:Id=\"UsernameToken-1\" xmlns:oas1=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"><oas:Username>${amadeus.ws_user}</oas:Username><oas:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">${nonce}</oas:Nonce><oas:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">${digest}</oas:Password><oas1:Created>${timestamp}</oas1:Created></oas:UsernameToken></oas:Security><AMA_SecurityHostedUser xmlns=\"http://xml.amadeus.com/2010/06/Security_v1\"><UserID AgentDutyCode=\"SU\" RequestorType=\"U\" PseudoCityCode=\"${amadeus.office_id}\" POS_Type=\"1\"/></AMA_SecurityHostedUser>${lastLine}</soapenv:Header>` };
 }
 module.exports.generateHeader = generateHeader;
 function generateHeaderStateful(data, type, session) {
     const lastLine = type == 2 ? 'InSeries' : 'End';
     /* in session o end */
-    return `<soapenv:Header>
-    <add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">00ffa81b-7176-b9d5-898b-9bc51050faab</add:MessageID>
+    return {
+        dataOut: session, header: `<soapenv:Header>
+    <add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">${session.mid}</add:MessageID>
     <add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/${data}</add:Action>
     <add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS</add:To>
 	<awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3">
-		<awsse:SessionId>${session.SessionId}</awsse:SessionId>
+		<awsse:SessionId>${session.sessionId}</awsse:SessionId>
 		<awsse:SequenceNumber>${session.sequenceNumber}</awsse:SequenceNumber>
 		<awsse:SecurityToken>${session.securityToken}</awsse:SecurityToken>
 	</awsse:Session>
-</soapenv:Header>`;
+</soapenv:Header>`};
 }
 module.exports.generateHeaderStateful = generateHeaderStateful;
