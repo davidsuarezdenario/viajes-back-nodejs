@@ -5,18 +5,17 @@ const auth = require('../middleware/jwt');
 
 /* AMADEUS */
 router.get('/iata_codes', amadeusController.iataCodes);
-router.post('/booking', amadeusController.booking1);
-router.post('/booking_2', amadeusController.booking2);
+router.post('/master_pricer_travel_board_search', amadeusController.Fare_MasterPricerTravelBoardSearch);
+router.post('/informative_pricing_without_pnr', amadeusController.Fare_InformativePricingWithoutPNR);
+router.post('/sell_from_recommendation', amadeusController.Air_SellFromRecommendation);
+router.post('/add_multi_elements', amadeusController.PNR_AddMultiElements);
+router.post('/create_form_of_payment', amadeusController.FOP_CreateFormOfPayment);
+router.post('/price_pnr_with_booking_class', amadeusController.Fare_PricePNRWithBookingClass);
+router.post('/create_tst_from_pricing', amadeusController.Ticket_CreateTSTFromPricing);
+router.post('/sign_out', amadeusController.Security_SignOut);
 
 router.post('/xml2json', amadeusController.xml2jsonReq);
 router.post('/json2xml', amadeusController.json2xmlReq);
 /* router.post('/xml', amadeusController.testXML);
 router.post('/header', amadeusController.header); */
-/* router.post('/search_location', travelController.searchLocation);
-router.post('/search_subentity', travelController.searchSubentity);
-router.post('/search_topdestinations', travelController.searchTopdestinations);
-router.post('/booking_one', travelController.bookingStep1);
-router.post('/booking_two', travelController.bookingStep2);
-router.post('/booking_three', travelController.bookingStep3); */
-
 module.exports = router;

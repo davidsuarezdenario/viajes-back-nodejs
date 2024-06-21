@@ -1,5 +1,3 @@
-/* const jwt = require('jsonwebtoken');
-const hash = require('../utils/hash'); */
 const sql = require("mssql");
 const requesthttp = require('request');
 const qs = require('qs');
@@ -18,31 +16,47 @@ exports.iataCodes = async (req, res) => {
         res.status(400).json({ error: true, data: err });
     });
 }
-exports.booking1 = async (req, res) => { //Fare_MasterPricerTravelBoardSearch
+exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'FMPTBQ_23_1_1A', 0);
+    const resOk = await procesosAmadeusXML('POST', body.data, 'FMPTBQ_23_1_1A', 0, {});
     res.status(200).json({ error: false, data: resOk });
 }
-exports.booking2 = async (req, res) => { //Fare_InformativePricingWithoutPNR
+exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 1, {});
-    const session = resOk['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0];
-    /* console.log('session: ', session); */
-    const body1 = { "soapenv:Body": { "Fare_CheckRules": [{ "msgType": [{ "messageFunctionDetails": [{ "messageFunction": ["712"] }] }], "itemNumber": [{ "itemNumberDetails": [{ "number": ["1"] }] }] }] } };
-    const resOk1 = await procesosAmadeusXML('POST', body1, 'FARQNQ_07_1_1A', 2, { SessionId: session['awsse:SessionId'][0], sequenceNumber: 2, securityToken: session['awsse:SecurityToken'][0] });
-    /* console.log('resOk1: ', resOk1); */
-    const resOk2 = await procesosAmadeusXML('POST', {}, 'VLSSOQ_04_1_1A', 3, { SessionId: session['awsse:SessionId'][0], sequenceNumber: 2, securityToken: session['awsse:SecurityToken'][0] });
-    /* console.log('resOk2: ', resOk2); */
-    res.status(200).json({ error: false, data: resOk2 });
-}
-exports.booking3 = async (req, res) => {
-    const resOk = await procesosAmadeusXML('POST', body.data, body.action, body.stateful);
+    const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 0, {});
     res.status(200).json({ error: false, data: resOk });
 }
-exports.booking4 = async (req, res) => {
-    const resOk = await procesosAmadeusXML('POST', body.data, body.action, body.stateful);
+exports.Air_SellFromRecommendation = async (req, res) => {
+    const body = req.body;
+    const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 0, {});
     res.status(200).json({ error: false, data: resOk });
 }
+exports.PNR_AddMultiElements = async (req, res) => {
+    const body = req.body;
+    const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
+    res.status(200).json({ error: false, data: resOk });
+}
+exports.FOP_CreateFormOfPayment = async (req, res) => {
+    const body = req.body;
+    const resOk = await procesosAmadeusXML('POST', body.data, 'TFOPCQ_19_2_1A', 0, {});
+    res.status(200).json({ error: false, data: resOk });
+}
+exports.Fare_PricePNRWithBookingClass = async (req, res) => {
+    const body = req.body;
+    const resOk = await procesosAmadeusXML('POST', body.data, 'TPCBRQ_23_2_1A', 0, {});
+    res.status(200).json({ error: false, data: resOk });
+}
+exports.Ticket_CreateTSTFromPricing = async (req, res) => {
+    const body = req.body;
+    const resOk = await procesosAmadeusXML('POST', body.data, 'TAUTCQ_04_1_1A', 0, {});
+    res.status(200).json({ error: false, data: resOk });
+}
+exports.Security_SignOut = async (req, res) => {
+    const body = req.body;
+    const resOk = await procesosAmadeusXML('POST', body.data, 'VLSSOQ_04_1_1A', 3, {});
+    res.status(200).json({ error: false, data: resOk });
+}
+//Funciones globales
 async function procesosAmadeusXML(method, body, action, type, session) {
     return new Promise(async (resolve, reject) => {
         let options = {};
@@ -98,9 +112,3 @@ exports.json2xmlReq = async (req, res) => {
     const resOk = await json2xml(req.body);
     res.status(200).json({ error: false, data: resOk });
 }
-/* exports.header = async (req, res) => {
-    console.log('llega todo ok 1');
-    const resOk = await headerAmadeus.generateHeader(req.body.action);
-    console.log(resOk);
-    res.status(200).json(resOk);
-} */
