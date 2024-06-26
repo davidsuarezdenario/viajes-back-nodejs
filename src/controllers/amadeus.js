@@ -19,17 +19,17 @@ exports.iataCodes = async (req, res) => {
 exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'FMPTBQ_23_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
+    res.status(200).json({ error: false, data: resOk.newJSON, session: {} });
 }
 exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     const body = req.body;
     console.log('body: ', body);
-    const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 0, body.session);
+    const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 1, {});
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Air_SellFromRecommendation = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 0, {});
+    const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 2, body.session);
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.PNR_AddMultiElements = async (req, res) => {
@@ -77,9 +77,11 @@ async function procesosAmadeusXML(method, body, action, type, session) {
             if (error) { 
                 reject({ error: true, data: error }); 
             } else { 
+                console.log(response.body);
                 const newJSON = await xml2json(response.body); 
-                console.log(newJSON); 
+                /* console.log(newJSON); */
                 headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0]; headerOk.dataOut.sequenceNumber = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]; headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0]; headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
+                console.log('headerOk: ', headerOk.dataOut);
                 resolve({ newJSON: newJSON, dataOut: headerOk.dataOut }); 
             }
         })
