@@ -1,6 +1,4 @@
-const express = require('express');
-const router = express.Router();
-const amadeusController = require('../controllers/amadeus');
+const express = require('express'), router = express.Router(), amadeusController = require('../controllers/amadeus');
 const auth = require('../middleware/jwt');
 
 /* AMADEUS */

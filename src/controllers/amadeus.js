@@ -1,10 +1,4 @@
-const sql = require("mssql");
-const requesthttp = require('request');
-const qs = require('qs');
-const xml2js = require('xml2js');
-const builder = new xml2js.Builder();
-const headerAmadeus = require('../controllers/headerAmadeus');
-const deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const sql = require("mssql"), requesthttp = require('request'), qs = require('qs'), xml2js = require('xml2js'), builder = new xml2js.Builder(), headerAmadeus = require('../controllers/headerAmadeus'), deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
 let token = '';
 
@@ -18,17 +12,19 @@ exports.iataCodes = async (req, res) => {
 }
 exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
+    console.log('Fare_MasterPricerTravelBoardSearch');
     const resOk = await procesosAmadeusXML('POST', body.data, 'FMPTBQ_23_1_1A', 0, {});
     res.status(200).json({ error: false, data: resOk.newJSON, session: {} });
 }
 exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     const body = req.body;
-    console.log('body: ', body);
+    console.log('Fare_MasterPricerTravelBoardSearch: ', body);
     const resOk = await procesosAmadeusXML('POST', body.data, 'TIPNRQ_23_1_1A', 1, {});
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Air_SellFromRecommendation = async (req, res) => {
     const body = req.body;
+    console.log('Air_SellFromRecommendation: ', body);
     const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 2, body.session);
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
