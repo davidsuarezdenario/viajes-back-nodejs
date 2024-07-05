@@ -270,16 +270,6 @@ module.exports.generateHeader = generateHeader;
 function generateHeaderStateful(data, type, session) {
     const lastLine = type == 2 ? 'InSeries' : 'End';
     /* in session o end */
-    return {
-        dataOut: session, header: `<soapenv:Header>
-    <add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">${session.mid}</add:MessageID>
-    <add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/${data}</add:Action>
-    <add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS</add:To>
-	<awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3">
-		<awsse:SessionId>${session.sessionId}</awsse:SessionId>
-		<awsse:SequenceNumber>${session.sequenceNumber}</awsse:SequenceNumber>
-		<awsse:SecurityToken>${session.securityToken}</awsse:SecurityToken>
-	</awsse:Session>
-</soapenv:Header>`};
+    return { dataOut: session, header: `<soapenv:Header><add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">${session.mid}</add:MessageID><add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/${data}</add:Action><add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/1ASIWWANWPS</add:To><awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3"><awsse:SessionId>${session.sessionId}</awsse:SessionId><awsse:SequenceNumber>${session.sequenceNumber}</awsse:SequenceNumber><awsse:SecurityToken>${session.securityToken}</awsse:SecurityToken></awsse:Session></soapenv:Header>`};
 }
 module.exports.generateHeaderStateful = generateHeaderStateful;
