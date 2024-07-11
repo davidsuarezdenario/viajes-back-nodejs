@@ -1,10 +1,29 @@
 /* const jwt = require('jsonwebtoken');
-const sql = require("mssql");
 const hash = require('../utils/hash'); */
-const requesthttp = require('request');
-const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
+const sql = require("mssql");
+//const requesthttp = require('request');
+//const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
 
-exports.search_text = async (req, res) => {
+exports.getBookingId = async (req, res) => {
+    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingFlights WHERE Id=${data.Id}`;
+    request.query(textSql).then(async result => {
+        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
+    }).catch(err => {
+        res.status(400).json({ error: true, data: err });
+    });
+}
+exports.saveBookingId = async (req, res) => {
+    const request = new sql.Request(); const data = req.body;
+    const textSql = `INSERT INTO BookingFlights (CreateDate, Document, EntireName, Email, Phone, Amount, Departure, Arrival, DepartureDate, ArrivalDate, RoundTrip) OUTPUT inserted.Id VALUES
+    (GETDATE(), '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, '${(data.Departure).trim()}', '${(data.Arrival).trim()}', '${(data.DepartureDate).trim()}', '${(data.ArrivalDate).trim()}', ${data.RoundTrip ? 1 : 0})`;
+    request.query(textSql).then(result => {
+        res.status(200).json({ error: false, data: result.recordset[0].Id });
+    }).catch(err => {
+        request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
+        res.status(400).json({ error: true, data: err });
+    });
+}
+/* exports.searchText = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
         let pathConsulta = `locations/query?term=${data.search}&limit=${data.limit}&locale=es-ES&active_online=true`;
@@ -15,7 +34,7 @@ exports.search_text = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
-exports.search_location = async (req, res) => {
+exports.searchLocation = async (req, res) => {
     const data = req.body;
     if (data.lat != '' && data.lat != undefined) {
         const pathConsulta = `locations/radius?lat=${data.lat}&lon=${data.lon}&radius=250&locale=es-ES&active_only=true&location_types=city&location_types=airport`;
@@ -25,7 +44,7 @@ exports.search_location = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
-exports.search_subentity = async (req, res) => {
+exports.searchSubentity = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
         let pathConsulta = `locations/subentity?term=${data.search}&locale=es-ES&limit=${data.limit}&sort=name&active_only=true'`;
@@ -36,7 +55,7 @@ exports.search_subentity = async (req, res) => {
         res.status(400).json({ error: true, data: 'No se recibe texto' });
     }
 }
-exports.search_topdestinations = async (req, res) => {
+exports.searchTopdestinations = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
         const pathConsulta = `locations/topdestinations?term=${data.search}&locale=es-ES&limit=${data.limit}&sort=name&active_only=true&source_popularity=searches`;
@@ -128,4 +147,4 @@ async function procesosTravel(path, method, body) {
         })
     });
 }
-function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); }
+function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); } */
