@@ -5,7 +5,7 @@ const sql = require("mssql");
 //const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
 
 exports.getBookingId = async (req, res) => {
-    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}'`;
+    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1`;
     request.query(textSql).then(async result => {
         result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
     }).catch(err => {
@@ -22,6 +22,13 @@ exports.saveBookingId = async (req, res) => {
         //request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
         res.status(400).json({ error: true, data: err });
     });
+}
+exports.endingBookingId = async (req, res) => {
+    const request = new sql.Request(), data = req.body;
+    console.log('data: ', data);
+    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=2, NumSolCredito=${data.data.NumSol} WHERE Id='${data.data.Id}'`;
+    request.query(textSql);
+    res.end();
 }
 /* exports.searchText = async (req, res) => {
     const data = req.body;
