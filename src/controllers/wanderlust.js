@@ -5,7 +5,7 @@ const sql = require("mssql");
 //const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
 
 exports.getBookingId = async (req, res) => {
-    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingFlights WHERE Id=${data.Id}`;
+    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}'`;
     request.query(textSql).then(async result => {
         result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
     }).catch(err => {
@@ -13,13 +13,13 @@ exports.getBookingId = async (req, res) => {
     });
 }
 exports.saveBookingId = async (req, res) => {
-    const request = new sql.Request(); const data = req.body;
-    const textSql = `INSERT INTO BookingFlights (CreateDate, Document, EntireName, Email, Phone, Amount, Departure, Arrival, DepartureDate, ArrivalDate, RoundTrip) OUTPUT inserted.Id VALUES
-    (GETDATE(), '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, '${(data.Departure).trim()}', '${(data.Arrival).trim()}', '${(data.DepartureDate).trim()}', '${(data.ArrivalDate).trim()}', ${data.RoundTrip ? 1 : 0})`;
+    const request = new sql.Request(), timestamp = Date.now(), data = req.body;
+    const textSql = `INSERT INTO BookingReserves (Id, CreateDate, RoundTrip, DescriptionReserve, Document, EntireName, Email, Phone, Amount, StatusReserve) OUTPUT inserted.Id VALUES
+    ('${(data.Document).trim()}-${timestamp}', GETDATE(), ${data.RoundTrip ? 1 : 0}, '${(data.DescriptionReserve).trim()}', '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, 1)`;
     request.query(textSql).then(result => {
         res.status(200).json({ error: false, data: result.recordset[0].Id });
     }).catch(err => {
-        request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
+        //request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
         res.status(400).json({ error: true, data: err });
     });
 }
