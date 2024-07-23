@@ -5,7 +5,8 @@ const sql = require("mssql");
 //const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
 
 exports.getBookingId = async (req, res) => {
-    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1 AND AND (DATEADD(minute, -10, GETDATE()))<=CreateDate`;
+    /* const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1 AND (DATEADD(minute, -10, GETDATE()))<=CreateDate`; */
+    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1`;
     request.query(textSql).then(async result => {
         result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'Link no valido' });
     }).catch(err => {
@@ -26,7 +27,7 @@ exports.saveBookingId = async (req, res) => {
 exports.endingBookingId = async (req, res) => {
     const request = new sql.Request(), data = req.body;
     console.log('data: ', data);
-    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=2, NumSolCredito=${data.data.NumSol} WHERE Id='${data.data.Id}'`;
+    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=2, NumSolCredito=${data.credito.msg}, NumSolDenarios=${data.puntos.msg} WHERE Id='${data.data.Id}'`;
     request.query(textSql);
     res.end();
 }
