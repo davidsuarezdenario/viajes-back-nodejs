@@ -5,9 +5,9 @@ const sql = require("mssql");
 //const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
 
 exports.getBookingId = async (req, res) => {
-    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1`;
+    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1 AND AND (DATEADD(minute, -10, GETDATE()))<=CreateDate`;
     request.query(textSql).then(async result => {
-        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
+        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'Link no valido' });
     }).catch(err => {
         res.status(400).json({ error: true, data: err });
     });
