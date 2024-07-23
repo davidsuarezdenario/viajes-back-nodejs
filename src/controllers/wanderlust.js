@@ -15,8 +15,8 @@ exports.getBookingId = async (req, res) => {
 }
 exports.saveBookingId = async (req, res) => {
     const request = new sql.Request(), timestamp = Date.now(), data = req.body;
-    const textSql = `INSERT INTO BookingReserves (Id, CreateDate, RoundTrip, DescriptionReserve, Document, EntireName, Email, Phone, Amount, StatusReserve) OUTPUT inserted.Id VALUES
-    ('${(data.Document).trim()}-${timestamp}', GETDATE(), ${data.RoundTrip ? 1 : 0}, '${(data.DescriptionReserve).trim()}', '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, 1)`;
+    const textSql = `INSERT INTO BookingReserves (Id, CreateDate, RoundTrip, DescriptionReserve, Document, EntireName, Email, Phone, Amount, StatusReserve, DataFlight) OUTPUT inserted.Id VALUES
+    ('${(data.Document).trim()}-${timestamp}', GETDATE(), ${data.RoundTrip ? 1 : 0}, '${(data.DescriptionReserve).trim()}', '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, 1, '${data.DataFlight}')`;
     request.query(textSql).then(result => {
         res.status(200).json({ error: false, data: result.recordset[0].Id });
     }).catch(err => {
