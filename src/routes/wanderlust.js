@@ -17,5 +17,6 @@ router.post('/booking_three', travelController.bookingStep3); */
 router.post('/save_booking', travelController.saveBookingId);
 router.post('/get_booking', travelController.getBookingId);
 router.post('/ending_booking', travelController.endingBookingId);
+router.post('/cancel_booking', travelController.cancelBookingId);
 
 module.exports = router;

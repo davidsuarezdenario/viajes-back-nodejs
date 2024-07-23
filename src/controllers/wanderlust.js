@@ -30,6 +30,12 @@ exports.endingBookingId = async (req, res) => {
     request.query(textSql);
     res.end();
 }
+exports.cancelBookingId = async (req, res) => {
+    const request = new sql.Request(), data = req.body;
+    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=0 WHERE Id='${data.Id}'`;
+    request.query(textSql);
+    res.end();
+}
 /* exports.searchText = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
