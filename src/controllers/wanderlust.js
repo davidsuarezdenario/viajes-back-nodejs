@@ -27,7 +27,8 @@ exports.saveBookingId = async (req, res) => {
 exports.endingBookingId = async (req, res) => {
     const request = new sql.Request(), data = req.body;
     console.log('data: ', data);
-    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=2, NumSolCredito=${data.credito.msg}, NumSolDenarios=${data.puntos.msg} WHERE Id='${data.data.Id}'`;
+    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=2, NumSolCredito=${data.credito.id}, NumSolDenarios=${data.puntos.id} WHERE Id='${data.data.Id}'`;
+    console.log('textSql: ', textSql);
     request.query(textSql);
     res.end();
 }
