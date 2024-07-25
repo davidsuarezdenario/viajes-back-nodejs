@@ -40,7 +40,6 @@ exports.cancelBookingId = async (req, res) => {
 exports.loginDenario = async (req, res) => {
     const body = { documento: req.body.username, clave: req.body.password.trim() };
     await procesosHttp(`${authentication.url}/wanderlust/login_user`, 'POST', { 'Content-Type': 'application/json', 'Authorization': authentication.apikey }, body).then(async result => {
-        console.log('result', result);
         res.status(200).json(result);
     }).catch(err => {
         res.status(400).json({ status: false, data: err });
