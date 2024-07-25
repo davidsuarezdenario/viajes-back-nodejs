@@ -36,6 +36,12 @@ exports.cancelBookingId = async (req, res) => {
     request.query(textSql);
     res.end();
 }
+exports.loginDenario = async (req, res) => {
+    const data = req.body;
+    console.log('data: ', data);
+    res.end();
+}
+
 /* exports.searchText = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
