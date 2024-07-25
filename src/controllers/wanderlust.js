@@ -1,8 +1,9 @@
 /* const jwt = require('jsonwebtoken');
 const hash = require('../utils/hash'); */
 const sql = require("mssql");
-//const requesthttp = require('request');
+const requesthttp = require('request');
 //const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
+const authentication = { url1: 'https://api.denario.com.co/api', url: 'http://localhost:4370/api', apikey: 'AutWanderlustPro2024' }; //Producción
 
 exports.getBookingId = async (req, res) => {
     /* const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1 AND (DATEADD(minute, -10, GETDATE()))<=CreateDate`; */
@@ -37,11 +38,32 @@ exports.cancelBookingId = async (req, res) => {
     res.end();
 }
 exports.loginDenario = async (req, res) => {
-    const data = req.body;
-    console.log('data: ', data);
-    res.end();
+    const body = { documento: req.body.username, clave: req.body.password.trim() };
+    await procesosHttp(`${authentication.url}/wanderlust/login_user`, 'POST', { 'Content-Type': 'application/json', 'Authorization': authentication.apikey }, body).then(async result => {
+        console.log('result', result);
+        res.status(200).json(result);
+    }).catch(err => {
+        res.status(400).json({ status: false, data: err });
+    });
 }
-
+function procesosHttp(path, method, headers, body) {
+    return new Promise((resolve, reject) => {
+        let options;
+        if (method == 'GET') {
+            options = { method: method, url: path, headers: headers };
+        } else {
+            options = { method: method, url: path, headers: headers, body: body, json: true };
+        }
+        //console.log('console.log(,options);',options);
+        requesthttp(options, async (error, response, body) => {
+            if (error) {
+                reject({ error: true, data: error });
+            } else {
+                resolve(body);
+            }
+        })
+    });
+}
 /* exports.searchText = async (req, res) => {
     const data = req.body;
     if (data.search != '' && data.search != undefined) {
