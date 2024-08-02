@@ -36,14 +36,15 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
         if ((resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation).length > 0) {
             if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 1) {
-                for (let i = 0; i < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation.length; i++) {
+                /* for (let i = 0; i < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation.length; i++) { */
+                for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
                     for (let j = 0; j < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights.length; j++) {
-                        if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].segmentFlightRef[0].referencingDetail[0].refNumber[0] == resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j].propFlightGrDetail[0].flightProposal[0].ref[0]) {
+                        if (recommendation.segmentFlightRef[0].referencingDetail[0].refNumber[0] == resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j].propFlightGrDetail[0].flightProposal[0].ref[0]) {
                             result.push({
-                                id: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].itemNumber[0].itemNumberId[0].number[0],
-                                precio: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].recPriceInfo[0].monetaryDetail,
-                                pax: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].paxFareProduct,
-                                detalle: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].segmentFlightRef[0].referencingDetail,
+                                id: recommendation.itemNumber[0].itemNumberId[0].number[0],
+                                precio: recommendation.recPriceInfo[0].monetaryDetail,
+                                pax: recommendation.paxFareProduct,
+                                detalle: recommendation.segmentFlightRef[0].referencingDetail,
                                 ida: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j]
                             });
                         }
@@ -51,9 +52,22 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                 }
             } else if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 2) {
                 for (let i = 0; i < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation.length; i++) {
-                    let idaTemp = [], vueltaTemp = [];
+                    let idaTemp = [], vueltaTemp = [], idaTemp1 = [], vueltaTemp1 = [];
                     for (let j = 0; j < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights.length; j++) {
-                        if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].segmentFlightRef[0].referencingDetail[0].refNumber[0] == resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j].propFlightGrDetail[0].flightProposal[0].ref[0]) { idaTemp = resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j]; }
+                        if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].segmentFlightRef[0].referencingDetail[0].refNumber[0] == resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j].propFlightGrDetail[0].flightProposal[0].ref[0]) {
+                            idaTemp = resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j];
+                            /* for (trip of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j].flightDetails) {
+                                idaTemp1.push({
+                                    iataFrom:
+                                    iataTo:
+                                    timeFrom:
+                                    timeTo:
+
+                                    
+                                }
+                                );
+                            } */
+                        }
                     }
                     for (let k = 0; k < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[1].groupOfFlights.length; k++) {
                         if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation[i].segmentFlightRef[0].referencingDetail[1].refNumber[0] == resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[1].groupOfFlights[k].propFlightGrDetail[0].flightProposal[0].ref[0]) { vueltaTemp = resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[1].groupOfFlights[k]; }
@@ -135,11 +149,11 @@ async function procesosAmadeusXML(method, body, action, type, session) {
             if (error) {
                 reject({ error: true, data: error });
             } else {
-                console.log(response.body);
+                /* console.log(response.body); */
                 const newJSON = await xml2json(response.body);
                 /* console.log(newJSON); */
                 headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0]; headerOk.dataOut.sequenceNumber = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]; headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0]; headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
-                console.log('headerOk: ', headerOk.dataOut);
+                /* console.log('headerOk: ', headerOk.dataOut); */
                 resolve({ newJSON: newJSON, dataOut: headerOk.dataOut });
             }
         })
