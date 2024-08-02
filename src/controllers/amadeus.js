@@ -38,7 +38,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                 }
             } else if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 2) {
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
-                    let idaTemp = [], vueltaTemp = [], idaTemp1 = [], vueltaTemp1 = [];
+                    let idaTemp = [], vueltaTemp = [];
                     for (recommendationSegment of recommendation.segmentFlightRef) {
                         console.log('recommendationSegment: ', JSON.stringify(recommendationSegment));
                         for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights) {
@@ -46,7 +46,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                 idaTemp = groupOfFlights;
                                 for (flightDetails of groupOfFlights.flightDetails) {
                                     /* console.log(`id: ${recommendation.itemNumber[0].itemNumberId[0].number[0]} (ida): `, JSON.stringify(flightDetails)); */
-                                    idaTemp1.push({
+                                    idaTemp.push({
                                         electronicTicketing: flightDetails.flightInformation[0].addProductDetail[0].electronicTicketing[0],
                                         productDetailQualifier: flightDetails.flightInformation[0].addProductDetail[0].productDetailQualifier[0],
                                         marketingCarrier: flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
@@ -82,7 +82,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                 vueltaTemp = groupOfFlights;
                                 for (flightDetails of groupOfFlights.flightDetails) {
                                     /* console.log(`id: ${recommendation.itemNumber[0].itemNumberId[0].number[0]} (vuelta): `, flightDetails); */
-                                    vueltaTemp1.push({
+                                    vueltaTemp.push({
                                         electronicTicketing: flightDetails.flightInformation[0].addProductDetail[0].electronicTicketing[0],
                                         productDetailQualifier: flightDetails.flightInformation[0].addProductDetail[0].productDetailQualifier[0],
                                         marketingCarrier: flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
@@ -120,8 +120,8 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                 fee: recommendation.recPriceInfo[0].monetaryDetail[1].amount[0]
                             },
                             pax: recommendation.paxFareProduct, detalle: recommendation.segmentFlightRef[0].referencingDetail,
-                            ida: idaTemp1,
-                            vuelta: vueltaTemp1
+                            ida: idaTemp,
+                            vuelta: vueltaTemp
                         });
                     }
                 }
