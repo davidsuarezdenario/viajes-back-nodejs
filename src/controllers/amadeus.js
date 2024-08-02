@@ -38,14 +38,15 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
             if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 1) {
                 /* for (let i = 0; i < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation.length; i++) { */
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
-                    for (let j = 0; j < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights.length; j++) {
-                        if (recommendation.segmentFlightRef[0].referencingDetail[0].refNumber[0] == resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j].propFlightGrDetail[0].flightProposal[0].ref[0]) {
+                    /* for (let j = 0; j < resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights.length; j++) { */
+                    for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights) {
+                        if (recommendation.segmentFlightRef[0].referencingDetail[0].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
                             result.push({
                                 id: recommendation.itemNumber[0].itemNumberId[0].number[0],
                                 precio: recommendation.recPriceInfo[0].monetaryDetail,
                                 pax: recommendation.paxFareProduct,
                                 detalle: recommendation.segmentFlightRef[0].referencingDetail,
-                                ida: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights[j]
+                                ida: groupOfFlights
                             });
                         }
                     }
