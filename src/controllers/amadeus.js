@@ -63,17 +63,12 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                     }
                 }
             } else if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 2) {
-                let recommendationCount = 0;
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
-                    recommendationCount++;
-                    let recommendationSegmentCount = 0;
                     for (recommendationSegment of recommendation.segmentFlightRef) {
                         let idaTemp = [], vueltaTemp = [];
-                        recommendationSegmentCount++;
                         for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights) {
                             if (recommendationSegment.referencingDetail[0].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
                                 idaTemp = [];
-                                console.log(`recommendation ${recommendationCount}-${recommendationSegmentCount}: ${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`);
                                 for (flightDetails of groupOfFlights.flightDetails) {
                                     idaTemp.push({
                                         iataFrom: flightDetails.flightInformation[0].location[0].locationId[0],
@@ -105,13 +100,10 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                 }
                             }
                         }
-                        console.log(`idaTemp: `, idaTemp);
                         for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[1].groupOfFlights) {
-                            /* if (recommendationSegment.referencingDetail[1].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) { */
                             if (recommendationSegment.referencingDetail[1].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
                                 vueltaTemp = [];
                                 for (flightDetails of groupOfFlights.flightDetails) {
-                                    /* console.log(`id: ${recommendation.itemNumber[0].itemNumberId[0].number[0]} (vuelta): `, flightDetails); */
                                     vueltaTemp.push({
                                         iataFrom: flightDetails.flightInformation[0].location[0].locationId[0],
                                         iataTo: flightDetails.flightInformation[0].location[1].locationId[0],
