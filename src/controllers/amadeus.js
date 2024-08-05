@@ -63,15 +63,18 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                     }
                 }
             } else if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 2) {
+                let recommendationCount = 0;
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
-                    let idaTemp = [], vueltaTemp = [];
+                    recommendationCount++;
+                    let recommendationSegmentCount = 0;
                     for (recommendationSegment of recommendation.segmentFlightRef) {
-                        /* console.log('recommendationSegment: ', JSON.stringify(recommendationSegment)); */
+                        let idaTemp = [], vueltaTemp = [];
+                        recommendationSegmentCount++;
                         for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights) {
                             if (recommendationSegment.referencingDetail[0].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
-                                /* idaTemp = groupOfFlights; */
+                                idaTemp = [];
+                                console.log(`recommendation ${recommendationCount}-${recommendationSegmentCount}: ${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`);
                                 for (flightDetails of groupOfFlights.flightDetails) {
-                                    /* console.log(`id: ${recommendation.itemNumber[0].itemNumberId[0].number[0]} (ida): `, JSON.stringify(flightDetails)); */
                                     idaTemp.push({
                                         iataFrom: flightDetails.flightInformation[0].location[0].locationId[0],
                                         iataTo: flightDetails.flightInformation[0].location[1].locationId[0],
@@ -102,10 +105,11 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                 }
                             }
                         }
+                        console.log(`idaTemp: `, idaTemp);
                         for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[1].groupOfFlights) {
-                            /* if (recommendation.segmentFlightRef[0].referencingDetail[1].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) { */
+                            /* if (recommendationSegment.referencingDetail[1].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) { */
                             if (recommendationSegment.referencingDetail[1].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
-                                /* vueltaTemp = groupOfFlights; */
+                                vueltaTemp = [];
                                 for (flightDetails of groupOfFlights.flightDetails) {
                                     /* console.log(`id: ${recommendation.itemNumber[0].itemNumberId[0].number[0]} (vuelta): `, flightDetails); */
                                     vueltaTemp.push({
@@ -151,7 +155,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                         });
                     }
                 }
-                res.status(200).json({ error: false, data: result, session: {}, resOk: resOk.newJSON });
+                res.status(200).json({ error: false, data: result, session: {}, resOk: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0] });
             } else {
                 res.status(200).json({ error: true, data: { title1: 'Ups', title2: 'No se encontraron vuelos 1', title3: 'Intenta con otros parametros de busqueda.' }, session: {} });
             }
