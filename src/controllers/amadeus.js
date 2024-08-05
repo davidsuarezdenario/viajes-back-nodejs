@@ -13,6 +13,7 @@ exports.iataCodes = async (req, res) => {
 }
 exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
+    console.log('Fare_MasterPricerTravelBoardSearch: ', body);
     const requestedSegmentRef = body.type == 'idaVuelta' ? [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }, { requestedSegmentRef: [{ segRef: ["2"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataTo] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataFrom] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeTo), 'ddMMyy')] }] }] }] : [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }];
     let contPax = 1;
     const paxAdt = await Array.from({ length: body.adult }, () => ({ ref: [(contPax++) + ''] })), paxCnn = await Array.from({ length: body.child }, () => ({ ref: [(contPax++) + ''] })), paxInf = await Array.from({ length: body.infant }, (_, i) => ({ ref: [(i + 1) + ''], infantIndicator: [(i + 1) + ''] }));
@@ -20,48 +21,60 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     body.child > 0 ? paxReference.push({ ptc: ["CNN"], traveller: paxCnn }) : false; body.infant > 0 ? paxReference.push({ ptc: ["INF"], traveller: paxInf }) : false;
     const bodyNew = { data: { "soapenv:Body": { Fare_MasterPricerTravelBoardSearch: [{ numberOfUnit: [{ unitNumberDetail: [{ numberOfUnits: [body.adult + body.child], typeOfUnit: ["PX"] }, { numberOfUnits: ["250"], typeOfUnit: ["RC"] }] }], paxReference: paxReference, fareOptions: [{ pricingTickInfo: [{ pricingTicketing: [{ priceType: ["ET", "RP", "RU"] }] }] }], travelFlightInfo: [{ cabinId: [{ cabin: [body.cabin] }] }], itinerary: requestedSegmentRef }] } } };
     const resOk = await procesosAmadeusXML('POST', bodyNew.data, 'FMPTBQ_23_1_1A', 0, {});
-    /* console.log('resOk: ', JSON.stringify(resOk.newJSON)); */
     let result = [];
     if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
         if ((resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation).length > 0) {
             if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 1) {
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
-                    for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights) {
-                        if (recommendation.segmentFlightRef[0].referencingDetail[0].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
-                            let idaTemp = [];
-                            for (flightDetails of groupOfFlights.flightDetails) {
-                                idaTemp.push({
-                                    iataFrom: flightDetails.flightInformation[0].location[0].locationId[0],
-                                    iataTo: flightDetails.flightInformation[0].location[1].locationId[0],
-                                    dateFrom: flightDetails.flightInformation[0].productDateTime[0].dateOfDeparture[0],
-                                    dateTo: flightDetails.flightInformation[0].productDateTime[0].dateOfArrival[0],
-                                    timeFrom: flightDetails.flightInformation[0].productDateTime[0].timeOfDeparture[0],
-                                    timeTo: flightDetails.flightInformation[0].productDateTime[0].timeOfArrival[0],
-                                    terminalFrom: flightDetails.flightInformation[0].location[0].terminal?.[0] ?? null,
-                                    terminalTo: flightDetails.flightInformation[0].location[1].terminal?.[0] ?? null,
-                                    marketingCarrier: flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
-                                    operatingCarrier: flightDetails.flightInformation[0].companyId[0].operatingCarrier?.[0] ?? null,
-                                    numberTrip: flightDetails.flightInformation[0].flightOrtrainNumber[0],
-                                    aircraft: flightDetails.flightInformation[0].productDetail[0].equipmentType[0],
-                                    electronicTicketing: flightDetails.flightInformation[0].addProductDetail[0].electronicTicketing[0],
-                                    productDetailQualifier: flightDetails.flightInformation[0].addProductDetail[0].productDetailQualifier[0],
-                                    commercialAgreement: flightDetails.commercialAgreement ? {
-                                        codeShareType: flightDetails.commercialAgreement[0].codeshareDetails[0].codeShareType[0],
-                                        flightNumber: flightDetails.commercialAgreement[0].codeshareDetails[0].flightNumber[0]
-                                    } : null,
-                                    technicalStop: flightDetails.technicalStop ? {
-                                        iataCode: flightDetails.technicalStop[0].stopDetails[0].locationId[0],
-                                        date1: flightDetails.technicalStop[0].stopDetails[0].date[0],
-                                        time1: flightDetails.technicalStop[0].stopDetails[0].firstTime[0],
-                                        date2: flightDetails.technicalStop[0].stopDetails[1].date[0],
-                                        time2: flightDetails.technicalStop[0].stopDetails[1].firstTime[0]
-                                    } : null
+                    for (recommendationSegment of recommendation.segmentFlightRef) {
+                        for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights) {
+                            if (recommendation.segmentFlightRef[0].referencingDetail[0].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
+                                let idaTemp = [];
+                                for (flightDetails of groupOfFlights.flightDetails) {
+                                    idaTemp.push({
+                                        iataFrom: flightDetails.flightInformation[0].location[0].locationId[0],
+                                        iataTo: flightDetails.flightInformation[0].location[1].locationId[0],
+                                        dateFrom: flightDetails.flightInformation[0].productDateTime[0].dateOfDeparture[0],
+                                        dateTo: flightDetails.flightInformation[0].productDateTime[0].dateOfArrival[0],
+                                        dateVariaton: flightDetails.flightInformation[0].productDateTime[0].dateVariation?.[0] ?? null,
+                                        timeFrom: flightDetails.flightInformation[0].productDateTime[0].timeOfDeparture[0],
+                                        timeTo: flightDetails.flightInformation[0].productDateTime[0].timeOfArrival[0],
+                                        terminalFrom: flightDetails.flightInformation[0].location[0].terminal?.[0] ?? null,
+                                        terminalTo: flightDetails.flightInformation[0].location[1].terminal?.[0] ?? null,
+                                        marketingCarrier: flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
+                                        operatingCarrier: flightDetails.flightInformation[0].companyId[0].operatingCarrier?.[0] ?? flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
+                                        numberTrip: flightDetails.flightInformation[0].flightOrtrainNumber[0],
+                                        aircraft: flightDetails.flightInformation[0].productDetail[0].equipmentType[0],
+                                        electronicTicketing: flightDetails.flightInformation[0].addProductDetail[0].electronicTicketing[0],
+                                        productDetailQualifier: flightDetails.flightInformation[0].addProductDetail[0].productDetailQualifier[0],
+                                        commercialAgreement: flightDetails.commercialAgreement ? {
+                                            codeShareType: flightDetails.commercialAgreement[0].codeshareDetails[0].codeShareType[0],
+                                            flightNumber: flightDetails.commercialAgreement[0].codeshareDetails[0].flightNumber[0]
+                                        } : null,
+                                        technicalStop: flightDetails.technicalStop ? {
+                                            iataCode: flightDetails.technicalStop[0].stopDetails[0].locationId[0],
+                                            date1: flightDetails.technicalStop[0].stopDetails[0].date[0],
+                                            time1: flightDetails.technicalStop[0].stopDetails[0].firstTime[0],
+                                            date2: flightDetails.technicalStop[0].stopDetails[1].date[0],
+                                            time2: flightDetails.technicalStop[0].stopDetails[1].firstTime[0]
+                                        } : null
+                                    });
+                                }
+                                result.push({
+                                    id: `${recommendation.itemNumber[0].itemNumberId[0].number[0]}-${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`,
+                                    precio: {
+                                        total: recommendation.recPriceInfo[0].monetaryDetail[0].amount[0],
+                                        fee: recommendation.recPriceInfo[0].monetaryDetail[1].amount[0]
+                                    },
+                                    pax: recommendation.paxFareProduct,
+                                    detalle: recommendation.segmentFlightRef[0].referencingDetail,
+                                    ida: idaTemp
                                 });
                             }
-                            result.push({ id: recommendation.itemNumber[0].itemNumberId[0].number[0], precio: { total: recommendation.recPriceInfo[0].monetaryDetail[0].amount[0], fee: recommendation.recPriceInfo[0].monetaryDetail[1].amount[0] }, pax: recommendation.paxFareProduct, detalle: recommendation.segmentFlightRef[0].referencingDetail, ida: idaTemp });
                         }
                     }
                 }
+                res.status(200).json({ error: false, data: result, session: {}, resOk: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0] });
             } else if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 2) {
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
                     for (recommendationSegment of recommendation.segmentFlightRef) {
@@ -75,12 +88,13 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                         iataTo: flightDetails.flightInformation[0].location[1].locationId[0],
                                         dateFrom: flightDetails.flightInformation[0].productDateTime[0].dateOfDeparture[0],
                                         dateTo: flightDetails.flightInformation[0].productDateTime[0].dateOfArrival[0],
+                                        dateVariaton: flightDetails.flightInformation[0].productDateTime[0].dateVariation?.[0] ?? null,
                                         timeFrom: flightDetails.flightInformation[0].productDateTime[0].timeOfDeparture[0],
                                         timeTo: flightDetails.flightInformation[0].productDateTime[0].timeOfArrival[0],
                                         terminalFrom: flightDetails.flightInformation[0].location[0].terminal?.[0] ?? null,
                                         terminalTo: flightDetails.flightInformation[0].location[1].terminal?.[0] ?? null,
                                         marketingCarrier: flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
-                                        operatingCarrier: flightDetails.flightInformation[0].companyId[0].operatingCarrier?.[0] ?? null,
+                                        operatingCarrier: flightDetails.flightInformation[0].companyId[0].operatingCarrier?.[0] ?? flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
                                         numberTrip: flightDetails.flightInformation[0].flightOrtrainNumber[0],
                                         aircraft: flightDetails.flightInformation[0].productDetail[0].equipmentType[0],
                                         electronicTicketing: flightDetails.flightInformation[0].addProductDetail[0].electronicTicketing[0],
@@ -109,12 +123,13 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                         iataTo: flightDetails.flightInformation[0].location[1].locationId[0],
                                         dateFrom: flightDetails.flightInformation[0].productDateTime[0].dateOfDeparture[0],
                                         dateTo: flightDetails.flightInformation[0].productDateTime[0].dateOfArrival[0],
+                                        dateVariaton: flightDetails.flightInformation[0].productDateTime[0].dateVariation?.[0] ?? null,
                                         timeFrom: flightDetails.flightInformation[0].productDateTime[0].timeOfDeparture[0],
                                         timeTo: flightDetails.flightInformation[0].productDateTime[0].timeOfArrival[0],
                                         terminalFrom: flightDetails.flightInformation[0].location[0].terminal?.[0] ?? null,
                                         terminalTo: flightDetails.flightInformation[0].location[1].terminal?.[0] ?? null,
                                         marketingCarrier: flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
-                                        operatingCarrier: flightDetails.flightInformation[0].companyId[0].operatingCarrier?.[0] ?? null,
+                                        operatingCarrier: flightDetails.flightInformation[0].companyId[0].operatingCarrier?.[0] ?? flightDetails.flightInformation[0].companyId[0].marketingCarrier[0],
                                         numberTrip: flightDetails.flightInformation[0].flightOrtrainNumber[0],
                                         aircraft: flightDetails.flightInformation[0].productDetail[0].equipmentType[0],
                                         electronicTicketing: flightDetails.flightInformation[0].addProductDetail[0].electronicTicketing[0],
