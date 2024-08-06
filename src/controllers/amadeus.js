@@ -163,7 +163,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                         });
                     }
                 }
-                res.status(200).json({ error: false, data: result, session: {}, resOk: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0] });
+                res.status(200).json({ error: false, data: result, session: {} });
             } else {
                 res.status(200).json({ error: true, data: { title1: 'Ups', title2: 'No se encontraron vuelos 1', title3: 'Intenta con otros parametros de busqueda.' }, session: {} });
             }
@@ -178,37 +178,18 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
 exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     const body = req.body;
     let passengersGroup = [], segmentGroup = [];
-    console.log('Fare_MasterPricerTravelBoardSearch: ', body);
     if (body) {
-        let contPax = 1, contItem = 0;
+        let contItem = 0;
         for (pax of body.pax) {
             passengersGroup.push({
                 segmentRepetitionControl: [{
                     segmentControlDetails: [{
-                        quantity: [pax.ptc == "ADT" ? "1" : (pax.ptc == "CNN" ? "2" : "3")],
-                        numberOfUnits: [pax.total + '']
+                        quantity: [pax.ptc == "ADT" ? "1" : (pax.ptc == "CNN" ? "2" : "3")], numberOfUnits: [pax.total + '']
                     }]
                 }],
-                travellersID: [{ travellerDetails: pax.ref }],
-                discountPtc: [{ valueQualifier: [pax.ptc] }]
+                travellersID: [{ travellerDetails: pax.ref }], discountPtc: [{ valueQualifier: [pax.ptc] }]
             });
-            /* if (this.glbService.flightSelected.pax[i].paxReference[0].ptc[0] == 'ADT') {
-                let travellerDetails = [];
-                for (let j = 0; j < this.glbService.flightSelected.pax[i].paxReference[0].traveller.length; j++) { travellerDetails.push({ measurementValue: [(contPax++) + ''] }); }
-                passengersGroup.push({ segmentRepetitionControl: [{ segmentControlDetails: [{ quantity: ["1"], numberOfUnits: [this.glbService.flightSelected.pax[i].paxReference[0].traveller.length + ''] }] }], travellersID: [{ travellerDetails: travellerDetails }], discountPtc: [{ valueQualifier: ["ADT"] }] });
-            }
-            if (this.glbService.flightSelected.pax[i].paxReference[0].ptc[0] == 'CNN') {
-                let travellerDetails = [];
-                for (let k = 0; k < this.glbService.flightSelected.pax[i].paxReference[0].traveller.length; k++) { travellerDetails.push({ measurementValue: [(contPax++) + ''] }); }
-                passengersGroup.push({ segmentRepetitionControl: [{ segmentControlDetails: [{ quantity: ["2"], numberOfUnits: [this.glbService.flightSelected.pax[i].paxReference[0].traveller.length + ''] }] }], travellersID: [{ travellerDetails: travellerDetails }], discountPtc: [{ valueQualifier: ["CH"] }] });
-            }
-            if (this.glbService.flightSelected.pax[i].paxReference[0].ptc[0] == 'INF') {
-                let travellerDetails = [];
-                for (let l = 0; l < this.glbService.flightSelected.pax[i].paxReference[0].traveller.length; l++) { travellerDetails.push({ measurementValue: [(l + 1) + ''] }); }
-                passengersGroup.push({ segmentRepetitionControl: [{ segmentControlDetails: [{ quantity: ["3"], numberOfUnits: [this.glbService.flightSelected.pax[i].paxReference[0].traveller.length + ''] }] }], travellersID: [{ travellerDetails: travellerDetails }], discountPtc: [{ valueQualifier: ["INF"], fareDetails: [{ qualifier: ["766"] }] }] });
-            } */
         }
-        /*  console.log('flightSelected.pax: ', this.glbService.flightSelected.pax); */
         for (ida of body.ida) {
             contItem++;
             segmentGroup.push({
@@ -222,17 +203,6 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
                     itemNumber: [contItem + ""]
                 }]
             });
-            /* segmentGroup.push({
-                segmentInformation: [{
-                    flightDate: [{ departureDate: [this.glbService.flightSelected.ida.flightDetails[x].flightInformation[0].productDateTime[0].dateOfDeparture[0]], departureTime: [this.glbService.flightSelected.ida.flightDetails[x].flightInformation[0].productDateTime[0].timeOfDeparture[0]] }],
-                    boardPointDetails: [{ trueLocationId: [this.glbService.flightSelected.ida.flightDetails[x].flightInformation[0].location[0].locationId[0]] }],
-                    offpointDetails: [{ trueLocationId: [this.glbService.flightSelected.ida.flightDetails[x].flightInformation[0].location[1].locationId[0]] }],
-                    companyDetails: [{ marketingCompany: [this.glbService.flightSelected.ida.flightDetails[x].flightInformation[0].companyId[0].marketingCarrier[0]] }],
-                    flightIdentification: [{ flightNumber: [this.glbService.flightSelected.ida.flightDetails[x].flightInformation[0].flightOrtrainNumber[0]], bookingClass: [this.glbService.flightSelected.pax[0].fareDetails[0].groupOfFares[0].productInformation[0].cabinProduct[0].rbd[0]] }],
-                    flightTypeDetails: [{ flightIndicator: ["1"] }],
-                    itemNumber: [contItem + ""]
-                }]
-            }); */
         }
         if (body.vuelta) {
             for (vuelta of body.vuelta) {
@@ -248,20 +218,6 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
                         itemNumber: [contItem + ""]
                     }]
                 });
-                /* segmentGroup.push({
-                    segmentInformation: [{
-                        flightDate: [{ departureDate: [this.glbService.flightSelected.vuelta.flightDetails[y].flightInformation[0].productDateTime[0].dateOfDeparture[0]], departureTime: [this.glbService.flightSelected.vuelta.flightDetails[y].flightInformation[0].productDateTime[0].timeOfDeparture[0]] }],
-                        boardPointDetails: [{ trueLocationId: [this.glbService.flightSelected.vuelta.flightDetails[y].flightInformation[0].location[0].locationId[0]] }],
-                        offpointDetails: [{ trueLocationId: [this.glbService.flightSelected.vuelta.flightDetails[y].flightInformation[0].location[1].locationId[0]] }],
-                        companyDetails: [{ marketingCompany: [this.glbService.flightSelected.vuelta.flightDetails[y].flightInformation[0].companyId[0].marketingCarrier[0]] }],
-                        flightIdentification: [{
-                            flightNumber: [this.glbService.flightSelected.vuelta.flightDetails[y].flightInformation[0].flightOrtrainNumber[0]],
-                            bookingClass: [this.glbService.flightSelected.pax[0].fareDetails[0].groupOfFares[0].productInformation[0].cabinProduct[0].rbd[0]]
-                        }],
-                        flightTypeDetails: [{ flightIndicator: ["2"] }],
-                        itemNumber: [contItem + ""]
-                    }]
-                }); */
             }
         }
     }
@@ -279,16 +235,80 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
         }
     }
     const resOk = await procesosAmadeusXML('POST', bodyFare_InformativePricingWithoutPNR, 'TIPNRQ_23_1_1A', 1, {});
-    console.log('Fare_InformativePricingWithoutPNR', resOk);
-    /* res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut }); */
-    res.end();
+    const Fare_InformativePricingWithoutPNRResponse = resOk.newJSON["soapenv:Envelope"]["soapenv:Body"][0].Fare_InformativePricingWithoutPNRReply[0].mainGroup;
+    for (pricingGroupLevelGroup of Fare_InformativePricingWithoutPNRResponse[0].pricingGroupLevelGroup) {
+        pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[0].amount[0] = parseInt(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[0].amount[0]);
+        pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0] = parseInt(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0]);
+        pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0] = parseInt(pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0]);
+    }
+    const resOk1 = await Air_SellFromRecommendation(Fare_InformativePricingWithoutPNRResponse[0], resOk.dataOut, body);
+    res.status(200).json({ error: false, data: resOk1.newJSON, session: resOk1.dataOut });
 }
-exports.Air_SellFromRecommendation = async (req, res) => {
+async function Air_SellFromRecommendation(response, session, flight) {
+    let segmentInformationIda = [], quantity = 0, segmentInformationVuelta = [], segVuelta = false, body = { session: session };
+    console.log('response: ', response);
+    console.log('response: ', response.pricingGroupLevelGroup);
+    for (pricingGroupLevelGroup of response.pricingGroupLevelGroup) {
+        if (pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].quantity[0] != '3') {
+            quantity = quantity + parseInt(pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0]);
+        }
+    }
+    if (flight.vuelta) {
+        for (segmentLevelGroup of response.pricingGroupLevelGroup[0].fareInfoGroup[0].segmentLevelGroup) {
+            if (!segVuelta) {
+                segmentInformationIda.push({
+                    travelProductInformation: [{
+                        flightDate: [{ departureDate: [segmentLevelGroup.segmentInformation[0].flightDate[0].departureDate[0]] }],
+                        boardPointDetails: [{ trueLocationId: [segmentLevelGroup.segmentInformation[0].boardPointDetails[0].trueLocationId[0]] }],
+                        offpointDetails: [{ trueLocationId: [segmentLevelGroup.segmentInformation[0].offpointDetails[0].trueLocationId[0]] }],
+                        companyDetails: [{ marketingCompany: [segmentLevelGroup.segmentInformation[0].companyDetails[0].marketingCompany[0]] }],
+                        flightIdentification: [{ flightNumber: [segmentLevelGroup.segmentInformation[0].flightIdentification[0].flightNumber[0]], bookingClass: [segmentLevelGroup.segmentInformation[0].flightIdentification[0].bookingClass[0]] }]
+                    }],
+                    relatedproductInformation: [{ quantity: [quantity + ""], statusCode: ["NN"] }]
+                });
+                flight.ida[flight.ida.length - 1].iataTo == segmentLevelGroup.segmentInformation[0].offpointDetails[0].trueLocationId[0] ? segVuelta = true : false;
+            } else {
+                segmentInformationVuelta.push({
+                    travelProductInformation: [{
+                        flightDate: [{ departureDate: [segmentLevelGroup.segmentInformation[0].flightDate[0].departureDate[0]] }],
+                        boardPointDetails: [{ trueLocationId: [segmentLevelGroup.segmentInformation[0].boardPointDetails[0].trueLocationId[0]] }],
+                        offpointDetails: [{ trueLocationId: [segmentLevelGroup.segmentInformation[0].offpointDetails[0].trueLocationId[0]] }],
+                        companyDetails: [{ marketingCompany: [segmentLevelGroup.segmentInformation[0].companyDetails[0].marketingCompany[0]] }],
+                        flightIdentification: [{ flightNumber: [segmentLevelGroup.segmentInformation[0].flightIdentification[0].flightNumber[0]], bookingClass: [segmentLevelGroup.segmentInformation[0].flightIdentification[0].bookingClass[0]] }]
+                    }],
+                    relatedproductInformation: [{ quantity: [quantity + ""], statusCode: ["NN"] }]
+                });
+            }
+        }
+    } else {
+        for (segmentLevelGroup of response.pricingGroupLevelGroup[0].fareInfoGroup[0].segmentLevelGroup) {
+            segmentInformationIda.push({
+                travelProductInformation: [{
+                    flightDate: [{ departureDate: [segmentLevelGroup.segmentInformation[0].flightDate[0].departureDate[0]] }],
+                    boardPointDetails: [{ trueLocationId: [segmentLevelGroup.segmentInformation[0].boardPointDetails[0].trueLocationId[0]] }],
+                    offpointDetails: [{ trueLocationId: [segmentLevelGroup.segmentInformation[0].offpointDetails[0].trueLocationId[0]] }],
+                    companyDetails: [{ marketingCompany: [segmentLevelGroup.segmentInformation[0].companyDetails[0].marketingCompany[0]] }],
+                    flightIdentification: [{ flightNumber: [segmentLevelGroup.segmentInformation[0].flightIdentification[0].flightNumber[0]], bookingClass: [segmentLevelGroup.segmentInformation[0].flightIdentification[0].bookingClass[0]] }]
+                }],
+                relatedproductInformation: [{ quantity: [quantity + ""], statusCode: ["NN"] }]
+            });
+        }
+    }
+    if (flight.vuelta) {
+        body.data = { "soapenv:Body": { Air_SellFromRecommendation: [{ messageActionDetails: [{ messageFunctionDetails: [{ messageFunction: ["183"], additionalMessageFunction: ["M1"] }] }], itineraryDetails: [{ originDestinationDetails: [{ origin: [flight.ida[0].iataFrom], destination: [flight.ida[flight.ida.length - 1].iataTo] }], message: [{ messageFunctionDetails: [{ messageFunction: ["183"] }] }], segmentInformation: segmentInformationIda }, { originDestinationDetails: [{ origin: flight.vuelta[0].iataFrom, destination: flight.vuelta[flight.vuelta.length - 1].iataTo }], message: [{ messageFunctionDetails: [{ messageFunction: ["183"] }] }], segmentInformation: segmentInformationVuelta }] }] } }
+    } else {
+        body.data = { "soapenv:Body": { Air_SellFromRecommendation: [{ messageActionDetails: [{ messageFunctionDetails: [{ messageFunction: ["183"], additionalMessageFunction: ["M1"] }] }], itineraryDetails: [{ originDestinationDetails: [{ origin: [flight.ida[0].iataFrom], destination: [flight.ida[flight.ida.length - 1].iataTo] }], message: [{ messageFunctionDetails: [{ messageFunction: ["183"] }] }], segmentInformation: segmentInformationIda }] }] } }
+    }
+    const airSellFromRecommendationResponse = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 2, body.session);
+    console.log('airSellFromRecommendationResponse: ', airSellFromRecommendationResponse);
+    return { newJSON: airSellFromRecommendationResponse.newJSON, dataOut: airSellFromRecommendationResponse.dataOut };
+}
+/* exports.Air_SellFromRecommendation = async (req, res) => {
     const body = req.body;
     console.log('Air_SellFromRecommendation: ', body);
     const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 2, body.session);
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
-}
+} */
 exports.PNR_AddMultiElements = async (req, res) => {
     const body = req.body;
     const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
@@ -337,7 +357,7 @@ async function procesosAmadeusXML(method, body, action, type, session) {
                 /* console.log(response.body); */
                 const newJSON = await xml2json(response.body);
                 /* console.log(newJSON); */
-                headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0]; headerOk.dataOut.sequenceNumber = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]; headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0]; headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
+                headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0]; headerOk.dataOut.sequenceNumber = `${parseInt(newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]) + 1}`; headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0]; headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
                 /* console.log('headerOk: ', headerOk.dataOut); */
                 resolve({ newJSON: newJSON, dataOut: headerOk.dataOut });
             }
