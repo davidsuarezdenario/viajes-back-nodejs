@@ -237,15 +237,18 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     const resOk = await procesosAmadeusXML('POST', bodyFare_InformativePricingWithoutPNR, 'TIPNRQ_23_1_1A', 1, {});
     const Fare_InformativePricingWithoutPNRResponse = resOk.newJSON["soapenv:Envelope"]["soapenv:Body"][0].Fare_InformativePricingWithoutPNRReply[0].mainGroup;
     for (pricingGroupLevelGroup of Fare_InformativePricingWithoutPNRResponse[0].pricingGroupLevelGroup) {
+        /* console.log('pricingGroupLevelGroup: ', pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails); */
         pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[0].amount[0] = parseInt(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[0].amount[0]);
-        pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0] = parseInt(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0]);
+        if(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails.length > 1) {
+            pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0] = parseInt(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0]);
+        }
         pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0] = parseInt(pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0]);
     }
     const resOk1 = await Air_SellFromRecommendation(Fare_InformativePricingWithoutPNRResponse[0], resOk.dataOut, body);
     res.status(200).json({ error: false, data: resOk1.newJSON, fare: resOk1.fare, session: resOk1.dataOut });
 }
 async function Air_SellFromRecommendation(response, session, flight) {
-    let segmentInformationIda = [], quantity = 0, segmentInformationVuelta = [], fare = [], seats = [], segVuelta = false, body = { session: session };
+    let segmentInformationIda = [], quantity = 0, segmentInformationVuelta = [], fare = {}, seats = [], segVuelta = false, body = { session: session };
     for (pricingGroupLevelGroup of response.pricingGroupLevelGroup) {
         if (pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].quantity[0] != '3') {
             quantity = quantity + parseInt(pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0]);
@@ -300,12 +303,12 @@ async function Air_SellFromRecommendation(response, session, flight) {
     for (resp of response.pricingGroupLevelGroup) {
         let measurementValue = [];
         for (travellerId of resp.passengersID[0].travellerDetails) { measurementValue.push(travellerId.measurementValue[0]); }
-        fare.push({
+        fare[`${resp.numberOfPax[0].segmentControlDetails[0].quantity[0] == '1' ? 'ADT' : (resp.numberOfPax[0].segmentControlDetails[0].quantity[0] == '2' ? 'CNN' : 'INF')}`] = {
             passenger: resp.numberOfPax[0].segmentControlDetails[0].quantity[0] == '1' ? 'ADT' : (resp.numberOfPax[0].segmentControlDetails[0].quantity[0] == '2' ? 'CNN' : 'INF'),
             quantity: resp.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0],
             passengersId: measurementValue,
-            total: resp.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0]
-        });
+            total: resp.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails?.[1] ? resp.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails?.[1].amount[0] : resp.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[0].amount[0]
+        };
     }
     const airSellFromRecommendationResponse = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 2, body.session);
     for (recommendations of airSellFromRecommendationResponse.newJSON['soapenv:Envelope']['soapenv:Body'][0].Air_SellFromRecommendationReply[0].itineraryDetails) {
@@ -336,7 +339,6 @@ async function Air_SellFromRecommendation(response, session, flight) {
             details: details
         });
     }
-    console.log('airSellFromRecommendationResponse: ', airSellFromRecommendationResponse);
     return { newJSON: { seats: seats, message: airSellFromRecommendationResponse.newJSON['soapenv:Envelope']['soapenv:Body'][0].Air_SellFromRecommendationReply[0].message[0].messageFunctionDetails[0].messageFunction[0] }, fare: fare, dataOut: airSellFromRecommendationResponse.dataOut };
 }
 /* exports.Air_SellFromRecommendation = async (req, res) => {
