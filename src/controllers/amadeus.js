@@ -1,4 +1,5 @@
 const { format, parseISO } = require("date-fns");
+const fs = require('fs');
 const sql = require("mssql"), requesthttp = require('request'), qs = require('qs'), xml2js = require('xml2js'), builder = new xml2js.Builder(), headerAmadeus = require('../controllers/headerAmadeus'), deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
 let token = '';
@@ -14,6 +15,7 @@ exports.iataCodes = async (req, res) => {
 exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
     const requestedSegmentRef = body.type == 'idaVuelta' ? [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }, { requestedSegmentRef: [{ segRef: ["2"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataTo] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataFrom] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeTo), 'ddMMyy')] }] }] }] : [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }];
+    body.nonStop == false ? (requestedSegmentRef[0].flightInfo = [{ flightDetail: [{ flightType: ["N"] }] }]) : false;
     let contPax = 1;
     const paxAdt = await Array.from({ length: body.adult }, () => ({ ref: [(contPax++) + ''] })), paxCnn = await Array.from({ length: body.child }, () => ({ ref: [(contPax++) + ''] })), paxInf = await Array.from({ length: body.infant }, (_, i) => ({ ref: [(i + 1) + ''], infantIndicator: [(i + 1) + ''] }));
     let paxReference = [{ ptc: ["ADT"], traveller: paxAdt }];
@@ -239,7 +241,7 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     for (pricingGroupLevelGroup of Fare_InformativePricingWithoutPNRResponse[0].pricingGroupLevelGroup) {
         /* console.log('pricingGroupLevelGroup: ', pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails); */
         pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[0].amount[0] = parseInt(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[0].amount[0]);
-        if(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails.length > 1) {
+        if (pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails.length > 1) {
             pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0] = parseInt(pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails[1].amount[0]);
         }
         pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0] = parseInt(pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0]);
@@ -381,6 +383,7 @@ async function procesosAmadeusXML(method, body, action, type, session) {
         const headerOk = type < 2 ? await headerAmadeus.generateHeader(action, type) : await headerAmadeus.generateHeaderStateful(action, type, session);
         /* console.log('headerOk: ', headerOk); */
         const envelop = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:typ="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iat="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:app="http://xml.amadeus.com/2010/06/AppMdw_CommonTypes_v3" xmlns:link="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:ses="http://xml.amadeus.com/2010/06/Session_v3">${headerOk.header}${newXML}</soapenv:Envelope>`;
+        await saveXml(envelop, action + '_request');
         /* resolve(envelop); */
         /* console.log('envelop: ', envelop); */
         if (method == 'GET') {
@@ -393,6 +396,7 @@ async function procesosAmadeusXML(method, body, action, type, session) {
                 reject({ error: true, data: error });
             } else {
                 /* console.log(response.body); */
+                await saveXml(response.body, action + '_response');
                 const newJSON = await xml2json(response.body);
                 /* console.log(newJSON); */
                 headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0]; headerOk.dataOut.sequenceNumber = `${parseInt(newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]) + 1}`; headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0]; headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
@@ -426,6 +430,20 @@ async function xml2json(xml) {
 async function json2xml(json) {
     return new Promise((resolve, reject) => {
         resolve((builder.buildObject(json)).replace(deleteText, ''));
+    });
+}
+function saveXml(string, nombre) {
+    return new Promise((resolve, reject) => {
+        const filePath = `./files_xml/${nombre}.xml`;
+        fs.writeFile(filePath, string, (err) => {
+            if (err) {
+                console.error('Error al guardar el archivo XML:', err);
+                resolve(false);
+            } else {
+                console.log('Archivo XML guardado exitosamente en', filePath);
+                resolve(true);
+            }
+        });
     });
 }
 /* function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); } */
