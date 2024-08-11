@@ -5,7 +5,7 @@ const auth = require('../middleware/jwt');
 router.get('/iata_codes', amadeusController.iataCodes);
 router.post('/master_pricer_travel_board_search', amadeusController.Fare_MasterPricerTravelBoardSearch);
 router.post('/informative_pricing_without_pnr', amadeusController.Fare_InformativePricingWithoutPNR);
-router.post('/sell_from_recommendation', amadeusController.Air_SellFromRecommendation);
+/* router.post('/sell_from_recommendation', amadeusController.Air_SellFromRecommendation); */
 router.post('/add_multi_elements', amadeusController.PNR_AddMultiElements);
 router.post('/create_form_of_payment', amadeusController.FOP_CreateFormOfPayment);
 router.post('/price_pnr_with_booking_class', amadeusController.Fare_PricePNRWithBookingClass);

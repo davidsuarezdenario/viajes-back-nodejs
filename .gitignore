@@ -16,6 +16,7 @@
 # Archivos de registro
 *.log
 npm-debug.log*
+/files_xml
 
 # Archivos de editor
 .vscode

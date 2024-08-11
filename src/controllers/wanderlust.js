@@ -1,26 +1,66 @@
 /* const jwt = require('jsonwebtoken');
 const hash = require('../utils/hash'); */
 const sql = require("mssql");
-//const requesthttp = require('request');
+const requesthttp = require('request');
 //const authentication = { url: 'https://api.tequila.kiwi.com/', apikey: 'WD46QV90IhTg_UnVxzMcRuFO80K3W7wy' }; //Producción
+const authentication = { url1: 'https://api.denario.com.co/api', url: 'http://localhost:4370/api', apikey: 'AutWanderlustPro2024' }; //Producción
 
 exports.getBookingId = async (req, res) => {
-    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingFlights WHERE Id=${data.Id}`;
+    /* const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1 AND (DATEADD(minute, -10, GETDATE()))<=CreateDate`; */
+    const request = new sql.Request(), data = req.body, textSql = `SELECT * FROM BookingReserves WHERE Id='${data.Id}' AND StatusReserve=1`;
     request.query(textSql).then(async result => {
-        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'No se encuentra el registro' });
+        result.recordsets[0].length == 1 ? res.status(200).json({ error: false, data: result.recordsets[0][0] }) : res.status(200).json({ error: true, data: 'Link no valido' });
     }).catch(err => {
         res.status(400).json({ error: true, data: err });
     });
 }
 exports.saveBookingId = async (req, res) => {
-    const request = new sql.Request(); const data = req.body;
-    const textSql = `INSERT INTO BookingFlights (CreateDate, Document, EntireName, Email, Phone, Amount, Departure, Arrival, DepartureDate, ArrivalDate, RoundTrip) OUTPUT inserted.Id VALUES
-    (GETDATE(), '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, '${(data.Departure).trim()}', '${(data.Arrival).trim()}', '${(data.DepartureDate).trim()}', '${(data.ArrivalDate).trim()}', ${data.RoundTrip ? 1 : 0})`;
+    const request = new sql.Request(), timestamp = Date.now(), data = req.body;
+    const textSql = `INSERT INTO BookingReserves (Id, CreateDate, RoundTrip, DescriptionReserve, Document, EntireName, Email, Phone, Amount, StatusReserve, DataFlight) OUTPUT inserted.Id VALUES
+    ('${(data.Document).trim()}-${timestamp}', GETDATE(), ${data.RoundTrip ? 1 : 0}, '${(data.DescriptionReserve).trim()}', '${(data.Document).trim()}', '${(data.EntireName).trim()}', '${(data.Email).trim()}', '${(data.Phone).trim()}', ${data.Amount}, 1, '${data.DataFlight}')`;
     request.query(textSql).then(result => {
         res.status(200).json({ error: false, data: result.recordset[0].Id });
     }).catch(err => {
-        request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
+        //request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
         res.status(400).json({ error: true, data: err });
+    });
+}
+exports.endingBookingId = async (req, res) => {
+    const request = new sql.Request(), data = req.body;
+    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=2, NumSolCredito=${data.credito.id}, NumSolDenarios=${data.puntos.id} WHERE Id='${data.data.Id}'`;
+    request.query(textSql);
+    res.end();
+}
+exports.cancelBookingId = async (req, res) => {
+    const request = new sql.Request(), data = req.body;
+    const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=0 WHERE Id='${data.Id}'`;
+    request.query(textSql);
+    res.end();
+}
+exports.loginDenario = async (req, res) => {
+    const body = { documento: req.body.username, clave: req.body.password.trim() };
+    await procesosHttp(`${authentication.url}/wanderlust/login_user`, 'POST', { 'Content-Type': 'application/json', 'Authorization': authentication.apikey }, body).then(async result => {
+        res.status(200).json(result);
+    }).catch(err => {
+        res.status(400).json({ status: false, data: err });
+    });
+}
+function procesosHttp(path, method, headers, body) {
+    return new Promise((resolve, reject) => {
+        let options;
+        if (method == 'GET') {
+            options = { method: method, url: path, headers: headers };
+        } else {
+            options = { method: method, url: path, headers: headers, body: body, json: true };
+        }
+        //console.log('console.log(,options);',options);
+        requesthttp(options, async (error, response, body) => {
+            if (error) {
+                reject({ error: true, data: error });
+            } else {
+                resolve(body);
+            }
+        })
     });
 }
 /* exports.searchText = async (req, res) => {
