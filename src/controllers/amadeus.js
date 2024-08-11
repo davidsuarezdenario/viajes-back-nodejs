@@ -15,7 +15,7 @@ exports.iataCodes = async (req, res) => {
 exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
     const requestedSegmentRef = body.type == 'idaVuelta' ? [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }, { requestedSegmentRef: [{ segRef: ["2"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataTo] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataFrom] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeTo), 'ddMMyy')] }] }] }] : [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }];
-    body.nonStop == false ? (requestedSegmentRef[0].flightInfo = [{ flightDetail: [{ flightType: ["N"] }] }]) : false;
+    body.nonStop ? (requestedSegmentRef[0].flightInfo = [{ flightDetail: [{ flightType: ["N"] }] }]) : false;
     let contPax = 1;
     const paxAdt = await Array.from({ length: body.adult }, () => ({ ref: [(contPax++) + ''] })), paxCnn = await Array.from({ length: body.child }, () => ({ ref: [(contPax++) + ''] })), paxInf = await Array.from({ length: body.infant }, (_, i) => ({ ref: [(i + 1) + ''], infantIndicator: [(i + 1) + ''] }));
     let paxReference = [{ ptc: ["ADT"], traveller: paxAdt }];
