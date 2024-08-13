@@ -1,4 +1,4 @@
-const express = require('express'), router = express.Router(), amadeusController = require('../controllers/amadeus');
+const express = require('express'), router = express.Router(), amadeusController = require('../controllers/amadeus') ,newController = require('../controllers/new');
 const auth = require('../middleware/jwt');
 
 /* AMADEUS */
@@ -14,6 +14,8 @@ router.post('/sign_out', amadeusController.Security_SignOut);
 
 router.post('/xml2json', amadeusController.xml2jsonReq);
 router.post('/json2xml', amadeusController.json2xmlReq);
+
+router.post('/create-pnr', newController.newModel);
 /* router.post('/xml', amadeusController.testXML);
 router.post('/header', amadeusController.header); */
 module.exports = router;
