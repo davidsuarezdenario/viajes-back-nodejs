@@ -20,7 +20,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const paxAdt = await Array.from({ length: body.adult }, () => ({ ref: [(contPax++) + ''] })), paxCnn = await Array.from({ length: body.child }, () => ({ ref: [(contPax++) + ''] })), paxInf = await Array.from({ length: body.infant }, (_, i) => ({ ref: [(i + 1) + ''], infantIndicator: [(i + 1) + ''] }));
     let paxReference = [{ ptc: ["ADT"], traveller: paxAdt }];
     body.child > 0 ? paxReference.push({ ptc: ["CNN"], traveller: paxCnn }) : false; body.infant > 0 ? paxReference.push({ ptc: ["INF"], traveller: paxInf }) : false;
-    const bodyNew = { data: { "soapenv:Body": { Fare_MasterPricerTravelBoardSearch: [{ numberOfUnit: [{ unitNumberDetail: [{ numberOfUnits: [body.adult + body.child], typeOfUnit: ["PX"] }, { numberOfUnits: ["250"], typeOfUnit: ["RC"] }] }], paxReference: paxReference, fareOptions: [{ pricingTickInfo: [{ pricingTicketing: [{ priceType: ["ET", "RP", "RU"] }] }] }], travelFlightInfo: [{ cabinId: [{ cabin: [body.cabin] }] }], itinerary: requestedSegmentRef }] } } };
+    const bodyNew = { data: { "soapenv:Body": { Fare_MasterPricerTravelBoardSearch: [{ numberOfUnit: [{ unitNumberDetail: [{ numberOfUnits: [body.adult + body.child], typeOfUnit: ["PX"] }, { numberOfUnits: ["250"], typeOfUnit: ["RC"] }] }], paxReference: paxReference, fareOptions: [{ pricingTickInfo: [{ pricingTicketing: [{ priceType: ["ET", "RP", "RU", "TAC"] }] }] }], travelFlightInfo: [{ cabinId: [{ cabin: [body.cabin] }] }], itinerary: requestedSegmentRef }] } } };
     const resOk = await procesosAmadeusXML('POST', bodyNew.data, 'FMPTBQ_23_1_1A', 0, {});
     let result = [];
     if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
@@ -68,6 +68,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                     id: `${recommendation.itemNumber[0].itemNumberId[0].number[0]}-${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`,
                                     precio: { total: recommendation.recPriceInfo[0].monetaryDetail[0].amount[0], fee: recommendation.recPriceInfo[0].monetaryDetail[1].amount[0] },
                                     pax: paxOk,
+                                    vc: recommendation.paxFareProduct[0].paxFareDetail[0].codeShareDetails[0].company[0],
                                     detalle: recommendation.segmentFlightRef,
                                     ida: idaTemp
                                 });
@@ -75,7 +76,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                         }
                     }
                 }
-                res.status(200).json({ error: false, data: result, session: {}, resOk: resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0] });
+                res.status(200).json({ error: false, data: result, session: {} });
             } else if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 2) {
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
                     for (recommendationSegment of recommendation.segmentFlightRef) {
@@ -156,9 +157,9 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                         for (let j = 0; j < vueltaTemp.length; j++) { vueltaTemp[j].rbd = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].rbd[0]; vueltaTemp[j].avlStatus = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].avlStatus[0]; }
                         result.push({
                             id: `${recommendation.itemNumber[0].itemNumberId[0].number[0]}-${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`,
-                            prec: recommendation.recPriceInfo[0].monetaryDetail,
                             precio: { total: recommendation.recPriceInfo[0].monetaryDetail[0].amount[0], fee: recommendation.recPriceInfo[0].monetaryDetail[1].amount[0] },
                             pax: paxOk,
+                            vc: recommendation.paxFareProduct[0].paxFareDetail[0].codeShareDetails[0].company[0],
                             detalle: recommendation.segmentFlightRef,
                             ida: idaTemp,
                             vuelta: vueltaTemp
@@ -229,6 +230,7 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
                 passengersGroup: passengersGroup,
                 segmentGroup: segmentGroup,
                 pricingOptionGroup: [
+                    { pricingOptionKey: [{ pricingOptionKey: ["VC"] }], carrierInformation: [{ companyIdentification: [{ otherCompany: [body.vc] }] }] },
                     { pricingOptionKey: [{ pricingOptionKey: ["RP"] }] },
                     { pricingOptionKey: [{ pricingOptionKey: ["RLO"] }] },
                     { pricingOptionKey: [{ pricingOptionKey: ["FCO"] }], currency: [{ firstCurrencyDetails: [{ currencyQualifier: ["FCO"], currencyIsoCode: ["COP"] }] }] }
