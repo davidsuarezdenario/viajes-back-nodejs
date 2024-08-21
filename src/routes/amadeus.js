@@ -8,6 +8,7 @@ router.post('/informative_pricing_without_pnr', amadeusController.Fare_Informati
 /* router.post('/sell_from_recommendation', amadeusController.Air_SellFromRecommendation); */
 router.post('/add_multi_elements', amadeusController.PNR_AddMultiElements);
 router.post('/create_form_of_payment', amadeusController.FOP_CreateFormOfPayment);
+
 router.post('/price_pnr_with_booking_class', amadeusController.Fare_PricePNRWithBookingClass);
 router.post('/create_tst_from_pricing', amadeusController.Ticket_CreateTSTFromPricing);
 router.post('/sign_out', amadeusController.Security_SignOut);

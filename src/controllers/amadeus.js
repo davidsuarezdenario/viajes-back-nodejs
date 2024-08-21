@@ -358,7 +358,58 @@ exports.PNR_AddMultiElements = async (req, res) => {
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'TFOPCQ_19_2_1A', 0, {});
+    const newBody = {
+        FOP_CreateFormOfPayment: [
+            {
+                transactionContext: [{ transactionDetails: [{ code: ["FP"] }] }],
+                fopGroup: [
+                    {
+                        fopReference: [""],
+                        mopDescription: [
+                            {
+                                fopSequenceNumber: [{ sequenceDetails: [{ number: ["1"] }] }],
+                                mopDetails: [{ fopPNRDetails: [{ fopDetails: [{ fopCode: [`CCAX`] }] }] }],
+                                paymentModule: [
+                                    {
+                                        groupUsage: [{ attributeDetails: [{ attributeType: ["FP"] }] }],
+                                        mopInformation: [
+                                            {
+                                                fopInformation: [{ formOfPayment: [{ type: [body.data.typeCard] }] }],
+                                                dummy: [""],
+                                                creditCardData: [
+                                                    {
+                                                        creditCardDetails: [
+                                                            { ccInfo: [{ vendorCode: ["AX"], cardNumber: ["XXXXXXXXXXXXXXXX"], securityId: [body.data.securityCode], expiryDate: [body.data.expiryDate] }] }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        dummy: [""],
+                                        mopDetailedData: [
+                                            {
+                                                fopInformation: [{ formOfPayment: [{ type: ["CC"] }] }],
+                                                dummy: [""],
+                                                creditCardDetailedData: [
+                                                    {
+                                                        authorisationSupplementaryData: [""],
+                                                        approvalDetails: [
+                                                            { approvalCodeData: [{ approvalCode: ["12346"], sourceOfApproval: ["M"] }] }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+    const resOk = await procesosAmadeusXML('POST', newBody, 'TFOPCQ_19_2_1A', 0, body.session);
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Fare_PricePNRWithBookingClass = async (req, res) => {
