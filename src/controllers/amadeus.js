@@ -359,7 +359,7 @@ exports.PNR_AddMultiElements = async (req, res) => {
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
-    const newBody = {
+    const body_FOP_CreateFormOfPayment = {
         FOP_CreateFormOfPayment: [
             {
                 transactionContext: [{ transactionDetails: [{ code: ["FP"] }] }],
@@ -369,7 +369,7 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
                         mopDescription: [
                             {
                                 fopSequenceNumber: [{ sequenceDetails: [{ number: ["1"] }] }],
-                                mopDetails: [{ fopPNRDetails: [{ fopDetails: [{ fopCode: [`CCAX`] }] }] }],
+                                mopDetails: [{ fopPNRDetails: [{ fopDetails: [{ fopCode: [`${body.data.typeCard}${body.data.vendorCode}`] }] }] }],
                                 paymentModule: [
                                     {
                                         groupUsage: [{ attributeDetails: [{ attributeType: ["FP"] }] }],
@@ -377,28 +377,15 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
                                             {
                                                 fopInformation: [{ formOfPayment: [{ type: [body.data.typeCard] }] }],
                                                 dummy: [""],
-                                                creditCardData: [
-                                                    {
-                                                        creditCardDetails: [
-                                                            { ccInfo: [{ vendorCode: ["AX"], cardNumber: ["XXXXXXXXXXXXXXXX"], securityId: [body.data.securityCode], expiryDate: [body.data.expiryDate] }] }
-                                                        ]
-                                                    }
-                                                ]
+                                                creditCardData: [{ creditCardDetails: [{ ccInfo: [{ vendorCode: [body.data.vendorCode], cardNumber: [body.data.cardNumber], securityId: [body.data.securityCode], expiryDate: [body.data.expiryDate] }] }] }]
                                             }
                                         ],
                                         dummy: [""],
                                         mopDetailedData: [
                                             {
-                                                fopInformation: [{ formOfPayment: [{ type: ["CC"] }] }],
+                                                fopInformation: [{ formOfPayment: [{ type: [body.data.typeCard] }] }],
                                                 dummy: [""],
-                                                creditCardDetailedData: [
-                                                    {
-                                                        authorisationSupplementaryData: [""],
-                                                        approvalDetails: [
-                                                            { approvalCodeData: [{ approvalCode: ["12346"], sourceOfApproval: ["M"] }] }
-                                                        ]
-                                                    }
-                                                ]
+                                                creditCardDetailedData: [{ authorisationSupplementaryData: [""], approvalDetails: [{ approvalCodeData: [{ approvalCode: [body.data.approvalCode], sourceOfApproval: ["M"] }] }] }]
                                             }
                                         ]
                                     }
@@ -409,7 +396,49 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
                 ]
             }
         ]
-    }
+    };
+    const body_Fare_PricePNRWithBookingClass = {
+        Fare_PricePNRWithBookingClass: {
+            pricingOptionGroup: [
+                { pricingOptionKey: [ { pricingOptionKey: [ "RP" ] } ] },
+                { pricingOptionKey: [ { pricingOptionKey: [ "RLO" ] } ] },
+                { pricingOptionKey: [ { pricingOptionKey: [ "VC" ] } ], carrierInformation: [ { companyIdentification: [ { otherCompany: [ "AM" ] } ] } ] },
+                { pricingOptionKey: [ { pricingOptionKey: [ "FCO" ] } ], currency: [ { firstCurrencyDetails: [ { currencyQualifier: [ "FCO" ], currencyIsoCode: [ "COP" ] } ] } ] }
+            ]
+        }
+    };
+    const body_Ticket_CreateTSTFromPricing = {
+        Ticket_CreateTSTFromPricing: {
+            psaList: [
+                { itemReference: [ { referenceType: [ "TST" ], uniqueReference: [ "1" ] } ] },
+                { itemReference: [ { referenceType: [ "TST" ], uniqueReference: [ "2" ] } ] },
+                { itemReference: [ { referenceType: [ "TST" ], uniqueReference: [ "3" ] } ] }
+            ]
+        }
+    };
+    const body_PNR_AddMultiElements = {
+        PNR_AddMultiElements: {
+            pnrActions: [ { optionCode: [ "11" ] } ],
+            dataElementsMaster: [
+                {
+                    marker1: [ "" ],
+                    dataElementsIndiv: [
+                        {
+                            elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "2" ] } ], segmentName: [ "TK" ] } ],
+                            ticketElement: [ { ticket: [ { indicator: [ "OK" ] } ] } ]
+                        },
+                        {
+                            elementManagementData: [ { segmentName: [ "RF" ] } ],
+                            freetextData: [ { freetextDetail: [ { subjectQualifier: [ "3" ], type: [ "P22" ] } ], longFreetext: [ "Tayrona - Application" ] } ]
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+    const body_Security_SignOut = {
+        Security_SignOut: ""
+    };
     const resOk = await procesosAmadeusXML('POST', newBody, 'TFOPCQ_19_2_1A', 0, body.session);
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
