@@ -1,15 +1,4 @@
-const amadeusKey = { 
-    wsdl: process.env.WSDL, 
-    office_id: process.env.OFFICE_ID, 
-    ws_user: process.env.WS_USER, 
-    password: process.env.PASSWORD
-};
-/* const amadeusKey = { 
-    wsdl: '1ASIWWANWPS', 
-    office_id: 'BOGZ122AR', 
-    ws_user: 'WSWPSWAN', 
-    password: 'Bj2=yu3kX5zh'
-}; */
+const amadeusKey = { wsdl: process.env.WSDL, office_id: process.env.OFFICE_ID, ws_user: process.env.WS_USER, password: process.env.PASSWORD };
 const base64Chars = new Array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/');
 const keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 const END_OF_INPUT = -1;
@@ -281,6 +270,6 @@ module.exports.generateHeader = generateHeader;
 function generateHeaderStateful(data, type, session) {
     const lastLine = type == 2 ? 'InSeries' : 'End';
     /* in session o end */
-    return { dataOut: session, header: `<soapenv:Header><add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">${session.mid}</add:MessageID><add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/${data}</add:Action><add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/${amadeusKey.wsdl}</add:To><awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3"><awsse:SessionId>${session.sessionId}</awsse:SessionId><awsse:SequenceNumber>${session.sequenceNumber}</awsse:SequenceNumber><awsse:SecurityToken>${session.securityToken}</awsse:SecurityToken></awsse:Session></soapenv:Header>`};
+    return { dataOut: session, header: `<soapenv:Header><add:MessageID xmlns:add="http://www.w3.org/2005/08/addressing">${session.mid}</add:MessageID><add:Action xmlns:add="http://www.w3.org/2005/08/addressing">http://webservices.amadeus.com/${data}</add:Action><add:To xmlns:add="http://www.w3.org/2005/08/addressing">https://nodeD1.test.webservices.amadeus.com/${amadeusKey.wsdl}</add:To><awsse:Session TransactionStatusCode="${lastLine}" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3"><awsse:SessionId>${session.sessionId}</awsse:SessionId><awsse:SequenceNumber>${session.sequenceNumber}</awsse:SequenceNumber><awsse:SecurityToken>${session.securityToken}</awsse:SecurityToken></awsse:Session></soapenv:Header>` };
 }
 module.exports.generateHeaderStateful = generateHeaderStateful;

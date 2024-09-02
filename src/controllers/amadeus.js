@@ -190,7 +190,8 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
                         quantity: [pax.ptc == "ADT" ? "1" : (pax.ptc == "CNN" ? "2" : "3")], numberOfUnits: [pax.total + '']
                     }]
                 }],
-                travellersID: [{ travellerDetails: pax.ref }], discountPtc: [{ valueQualifier: [pax.ptc] }]
+                travellersID: [{ travellerDetails: pax.ref }],
+                discountPtc: [pax.ptc == "INF" ? { valueQualifier: [pax.ptc], fareDetails: [{ qualifier: ["766"] }] } : { valueQualifier: [pax.ptc] }]
             });
         }
         for (ida of body.ida) {
