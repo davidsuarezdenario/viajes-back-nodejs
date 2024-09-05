@@ -2,6 +2,8 @@ const express = require('express'), router = express.Router(), amadeusController
 const auth = require('../middleware/jwt');
 
 /* AMADEUS */
+router.get('/array_iata', amadeusController.updateArrayIata);
+router.post('/search_iata', amadeusController.searchArrayIata);
 router.get('/iata_codes', amadeusController.iataCodes);
 router.post('/master_pricer_travel_board_search', amadeusController.Fare_MasterPricerTravelBoardSearch);
 router.post('/informative_pricing_without_pnr', amadeusController.Fare_InformativePricingWithoutPNR);

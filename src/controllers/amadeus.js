@@ -2,7 +2,9 @@ const { format, parseISO } = require("date-fns");
 const fs = require('fs');
 const sql = require("mssql"), requesthttp = require('request'), qs = require('qs'), xml2js = require('xml2js'), builder = new xml2js.Builder(), headerAmadeus = require('../controllers/headerAmadeus'), deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
-let token = '';
+let token = '', arrayIata = [];
+
+console.log('arrayIata: ', arrayIata);
 
 exports.iataCodes = async (req, res) => {
     const request = new sql.Request();
@@ -11,6 +13,31 @@ exports.iataCodes = async (req, res) => {
     }).catch((err) => {
         res.status(400).json({ error: true, data: err });
     });
+}
+exports.updateArrayIata = async (req, res) => {
+    const request = new sql.Request();
+    await request.query(`SELECT * FROM IataCodesPlaces WHERE available=1`).then((object) => {
+        arrayIata = object.recordset;
+        res.status(200).json({ error: false })
+    }).catch((err) => {
+        res.status(400).json({ error: true });
+    });
+}
+exports.searchArrayIata = async (req, res) => {
+    const search = (normalizeString(req.body.search)).trim();
+    console.log('search: ', search);
+    if (search.length > 2) {
+        let result = arrayIata.filter((item) => normalizeString(item.iata).includes(search) || normalizeString(item.airport).includes(search) || normalizeString(item.city).includes(search) || normalizeString(item.country).includes(search));
+        res.status(200).json({ error: false, data: result });
+    } else {
+        res.status(400).json({ error: true, data: 'not found' });
+    }
+    res.end();
+    /* let result = arrayIata.filter((item) => item.iataCode == iata);
+    res.status(200).json({ error: false, data: result }); */
+}
+function normalizeString(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const body = req.body;
@@ -400,36 +427,36 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body_Fare_PricePNRWithBookingClass = {
         Fare_PricePNRWithBookingClass: {
             pricingOptionGroup: [
-                { pricingOptionKey: [ { pricingOptionKey: [ "RP" ] } ] },
-                { pricingOptionKey: [ { pricingOptionKey: [ "RLO" ] } ] },
-                { pricingOptionKey: [ { pricingOptionKey: [ "VC" ] } ], carrierInformation: [ { companyIdentification: [ { otherCompany: [ "AM" ] } ] } ] },
-                { pricingOptionKey: [ { pricingOptionKey: [ "FCO" ] } ], currency: [ { firstCurrencyDetails: [ { currencyQualifier: [ "FCO" ], currencyIsoCode: [ "COP" ] } ] } ] }
+                { pricingOptionKey: [{ pricingOptionKey: ["RP"] }] },
+                { pricingOptionKey: [{ pricingOptionKey: ["RLO"] }] },
+                { pricingOptionKey: [{ pricingOptionKey: ["VC"] }], carrierInformation: [{ companyIdentification: [{ otherCompany: ["AM"] }] }] },
+                { pricingOptionKey: [{ pricingOptionKey: ["FCO"] }], currency: [{ firstCurrencyDetails: [{ currencyQualifier: ["FCO"], currencyIsoCode: ["COP"] }] }] }
             ]
         }
     };
     const body_Ticket_CreateTSTFromPricing = {
         Ticket_CreateTSTFromPricing: {
             psaList: [
-                { itemReference: [ { referenceType: [ "TST" ], uniqueReference: [ "1" ] } ] },
-                { itemReference: [ { referenceType: [ "TST" ], uniqueReference: [ "2" ] } ] },
-                { itemReference: [ { referenceType: [ "TST" ], uniqueReference: [ "3" ] } ] }
+                { itemReference: [{ referenceType: ["TST"], uniqueReference: ["1"] }] },
+                { itemReference: [{ referenceType: ["TST"], uniqueReference: ["2"] }] },
+                { itemReference: [{ referenceType: ["TST"], uniqueReference: ["3"] }] }
             ]
         }
     };
     const body_PNR_AddMultiElements = {
         PNR_AddMultiElements: {
-            pnrActions: [ { optionCode: [ "11" ] } ],
+            pnrActions: [{ optionCode: ["11"] }],
             dataElementsMaster: [
                 {
-                    marker1: [ "" ],
+                    marker1: [""],
                     dataElementsIndiv: [
                         {
-                            elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "2" ] } ], segmentName: [ "TK" ] } ],
-                            ticketElement: [ { ticket: [ { indicator: [ "OK" ] } ] } ]
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["TK"] }],
+                            ticketElement: [{ ticket: [{ indicator: ["OK"] }] }]
                         },
                         {
-                            elementManagementData: [ { segmentName: [ "RF" ] } ],
-                            freetextData: [ { freetextDetail: [ { subjectQualifier: [ "3" ], type: [ "P22" ] } ], longFreetext: [ "Tayrona - Application" ] } ]
+                            elementManagementData: [{ segmentName: ["RF"] }],
+                            freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P22"] }], longFreetext: ["Tayrona - Application"] }]
                         }
                     ]
                 }
