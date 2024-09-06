@@ -25,7 +25,6 @@ exports.updateArrayIata = async (req, res) => {
 }
 exports.searchArrayIata = async (req, res) => {
     const search = (normalizeString(req.body.search)).trim();
-    console.log('search: ', search);
     if (search.length > 2) {
         let result = arrayIata.filter((item) => normalizeString(item.iata).includes(search) || normalizeString(item.airport).includes(search) || normalizeString(item.city).includes(search) || normalizeString(item.country).includes(search));
         res.status(200).json({ error: false, data: result });
@@ -89,7 +88,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                     });
                                 }
                                 let paxOk = [];
-                                for (paxPtc of recommendation.paxFareProduct) { let travellerDetails = []; for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: [pax.ref[0]] }); } paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length }); }
+                                for (paxPtc of recommendation.paxFareProduct) { let travellerDetails = []; for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: pax.ref[0] }); } paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length }); }
                                 for (let i = 0; i < idaTemp.length; i++) { idaTemp[i].rbd = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].rbd[0]; idaTemp[i].avlStatus = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].avlStatus[0]; }
                                 result.push({
                                     id: `${recommendation.itemNumber[0].itemNumberId[0].number[0]}-${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`,
@@ -179,7 +178,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                             }
                         }
                         let paxOk = [];
-                        for (paxPtc of recommendation.paxFareProduct) { let travellerDetails = []; for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: [pax.ref[0]] }); } paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length }); }
+                        for (paxPtc of recommendation.paxFareProduct) { let travellerDetails = []; for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: pax.ref[0] }); } paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length }); }
                         for (let i = 0; i < idaTemp.length; i++) { idaTemp[i].rbd = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].rbd[0]; idaTemp[i].avlStatus = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].avlStatus[0]; }
                         for (let j = 0; j < vueltaTemp.length; j++) { vueltaTemp[j].rbd = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].rbd[0]; vueltaTemp[j].avlStatus = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].avlStatus[0]; }
                         result.push({
@@ -381,8 +380,10 @@ async function Air_SellFromRecommendation(response, session, flight) {
 } */
 exports.PNR_AddMultiElements = async (req, res) => {
     const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
+    console.log('PNR_AddMultiElements: ', body);
+    /* const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut }); */
+    res.end();
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
