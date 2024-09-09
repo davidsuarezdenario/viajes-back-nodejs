@@ -1,6 +1,8 @@
 const { format, parseISO } = require("date-fns");
 const fs = require('fs');
-const sql = require("mssql"), requesthttp = require('request'), qs = require('qs'), xml2js = require('xml2js'), builder = new xml2js.Builder(), headerAmadeus = require('../controllers/headerAmadeus'), deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+
+
+const sql = require("mssql"), requesthttp = require('request'), qs = require('qs'), xml2js = require('xml2js'), builder = new xml2js.Builder(), headerAmadeus = require('../controllers/headerAmadeus'), querypnrAddMultiElementsBuilder = require('./PnrAddMultiElementsBuilder'), deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
 let token = '';
 
@@ -343,16 +345,50 @@ async function Air_SellFromRecommendation(response, session, flight) {
     }
     return { newJSON: { seats: seats, message: airSellFromRecommendationResponse.newJSON['soapenv:Envelope']['soapenv:Body'][0].Air_SellFromRecommendationReply[0].message[0].messageFunctionDetails[0].messageFunction[0] }, fare: fare, dataOut: airSellFromRecommendationResponse.dataOut };
 }
+
 /* exports.Air_SellFromRecommendation = async (req, res) => {
+    
     const body = req.body;
     console.log('Air_SellFromRecommendation: ', body);
     const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 2, body.session);
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 } */
+
+
 exports.PNR_AddMultiElements = async (req, res) => {
-    const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
+    const data = req.body;
+  
+    // Validar los datos mínimos requeridos para cada pasajero
+    if (!data.passengers || !Array.isArray(data.passengers) || data.passengers.length === 0) {
+        return res.status(400).send('Faltan datos requeridos para los pasajeros.');
+    }
+  
+    // Validar datos adicionales
+    if (!data.contactInfo || !data.airlineCode || !data.frequentFlyerNumber || !data.email || !data.docsInfo || !data.emailFormatted || !data.phoneNumber) {
+        return res.status(400).send('Faltan datos adicionales requeridos.');
+    }
+  
+    // Validar cada pasajero
+    for (const passenger of data.passengers) {
+        if (!passenger.name || !passenger.surname || !passenger.passengerType || !passenger.dateOfBirth) {
+            return res.status(400).send('Faltan datos requeridos para uno o más pasajeros.');
+        }
+    }
+  
+    const method = 'POST';
+    const body = querypnrAddMultiElementsBuilder.createPNRAddMultiElements(data);
+    // const action = 'PNR_AddMultiElements';
+    const action = 'PNRADD_21_1_1A';
+    const type = 0; // o el tipo adecuado para la solicitud
+    const session = { /* información de sesión, si es necesaria */ };
+    const response = await procesosAmadeusXML(method, body, action, type, session);
+    
+    // const body = req.body;
+    // const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
+
+    res.set('Content-Type', 'application/xml');
+    res.send(response);
+    // res.status(200).json({ error: false, data: response.newJSON, session: response.dataOut });
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
@@ -383,6 +419,7 @@ async function procesosAmadeusXML(method, body, action, type, session) {
         const headerOk = type < 2 ? await headerAmadeus.generateHeader(action, type) : await headerAmadeus.generateHeaderStateful(action, type, session);
         /* console.log('headerOk: ', headerOk); */
         const envelop = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:typ="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iat="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:app="http://xml.amadeus.com/2010/06/AppMdw_CommonTypes_v3" xmlns:link="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:ses="http://xml.amadeus.com/2010/06/Session_v3">${headerOk.header}${newXML}</soapenv:Envelope>`;
+        console.log(envelop);
         await saveXml(envelop, action + '_request');
         /* resolve(envelop); */
         /* console.log('envelop: ', envelop); */
