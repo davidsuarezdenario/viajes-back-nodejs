@@ -30,32 +30,49 @@ exports.createPNRAddMultiElements = (data) => {
     //     }
     // }));
     const passengers = data.passengers.map((passenger, index) => ({
-        travellerInfo: {
-            elementManagementPassenger: {
-                reference: {
-                    qualifier: 'PR',
-                    number: (index + 1).toString()  // El número de referencia debe ser único por pasajero
-                },
-                segmentName: 'AP'  // Cambiado de 'NM' a 'AP'
+        elementManagementPassenger: {
+            reference: {
+                qualifier: 'PR',
+                number: (index + 1).toString()  // El número de referencia debe ser único por pasajero
             },
-            passengerData: {
-                travellerInformation: {
-                    traveller: {
-                        surname: passenger.surname
-                    },
-                    passenger: {
-                        firstName: passenger.name,
-                        type: passenger.passengerType
-                    }
+            segmentName: 'AP'  // Cambiado de 'NM' a 'AP'
+        },
+        passengerData: {
+            travellerInformation: {
+                traveller: {
+                    surname: passenger.surname
                 },
-                dateOfBirth: {
-                    dateAndTimeDetails: {
-                        date: passenger.dateOfBirth
-                    }
+                passenger: {
+                    firstName: passenger.name,
+                    type: passenger.passengerType
+                }
+            },
+            dateOfBirth: {
+                dateAndTimeDetails: {
+                    date: passenger.dateOfBirth
                 }
             }
         }
     }));
+
+    const freeText = (passenger) => {
+        const {
+            documentType,
+            nationality,
+            documentNumber,
+            dateOfBirth,
+            gender,
+            expirationDate,
+            name,
+            surname
+        } = passenger;
+
+        return `${documentType}-COL-${documentNumber}-${nationality}-${dateOfBirth}-${gender}-${expirationDate}-${name.toUpperCase()}-${surname.toUpperCase()}`;
+    };
+
+    const docsInfo = data.passengers.map((passenger) => {
+        return freeText(passenger);
+    });
     const body = {
         "soapenv:Body": {
             'PNR_AddMultiElements': {
@@ -72,7 +89,7 @@ exports.createPNRAddMultiElements = (data) => {
                                     'qualifier': 'OT',
                                     'number': '1'
                                 },
-                                'segmentName': 'AP'
+                                'segmentName': 'NM'
                             },
                             'freetextData': {
                                 'freetextDetail': {
@@ -136,7 +153,7 @@ exports.createPNRAddMultiElements = (data) => {
                                     'status': 'HK',
                                     'quantity': '1',
                                     'companyId': 'YY',
-                                    'freetext': data.docsInfo
+                                    'freetext': docsInfo
                                 }
                             },
                             'referenceForDataElement': {

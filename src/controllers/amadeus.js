@@ -364,7 +364,7 @@ exports.PNR_AddMultiElements = async (req, res) => {
     }
   
     // Validar datos adicionales
-    if (!data.contactInfo || !data.airlineCode || !data.frequentFlyerNumber || !data.email || !data.docsInfo || !data.emailFormatted || !data.phoneNumber) {
+    if (!data.contactInfo || !data.airlineCode || !data.frequentFlyerNumber || !data.email || !data.emailFormatted || !data.phoneNumber) {
         return res.status(400).send('Faltan datos adicionales requeridos.');
     }
   
@@ -391,8 +391,36 @@ exports.PNR_AddMultiElements = async (req, res) => {
     // res.status(200).json({ error: false, data: response.newJSON, session: response.dataOut });
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
-    const body = req.body;
-    const resOk = await procesosAmadeusXML('POST', body.data, 'TFOPCQ_19_2_1A', 0, {});
+    const body = {
+        "soapenv:Body": {
+            "FOP_CreateFormOfPayment": {
+                "transactionContext": {
+                    "transactionDetails": {
+                        "code": "FP"
+                    }
+                },
+                "fopGroup": {
+                    "fopReference": {},
+                    "mopDescription": {
+                        "fopSequenceNumber": {
+                            "sequenceDetails": {
+                                "number": "1"
+                            }
+                        },
+                        "mopDetails": {
+                            "fopPNRDetails": {
+                                "fopDetails": {
+                                    "fopCode": "CASH"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
+    const resOk = await procesosAmadeusXML('POST', body, 'TFOPCQ_19_2_1A', 0, {});
     res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
 }
 exports.Fare_PricePNRWithBookingClass = async (req, res) => {
