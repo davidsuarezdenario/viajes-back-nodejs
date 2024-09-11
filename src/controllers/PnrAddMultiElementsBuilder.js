@@ -35,7 +35,7 @@ exports.createPNRAddMultiElements = (data) => {
                 qualifier: 'PR',
                 number: (index + 1).toString()  // El número de referencia debe ser único por pasajero
             },
-            segmentName: 'AP'  // Cambiado de 'NM' a 'AP'
+            segmentName: 'NM'  // Cambiado de 'NM' a 'AP'
         },
         passengerData: {
             travellerInformation: {
@@ -89,7 +89,7 @@ exports.createPNRAddMultiElements = (data) => {
                                     'qualifier': 'OT',
                                     'number': '1'
                                 },
-                                'segmentName': 'NM'
+                                'segmentName': 'AP'
                             },
                             'freetextData': {
                                 'freetextDetail': {
