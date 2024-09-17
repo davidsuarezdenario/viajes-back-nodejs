@@ -251,7 +251,7 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
             }
         }
     }
-    const bodyFare_InformativePricingWithoutPNR = {
+    const body_Fare_InformativePricingWithoutPNR = {
         "soapenv:Body": {
             Fare_InformativePricingWithoutPNR: [{
                 passengersGroup: passengersGroup,
@@ -265,7 +265,7 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
             }]
         }
     }
-    const resOk = await procesosAmadeusXML('POST', bodyFare_InformativePricingWithoutPNR, 'TIPNRQ_23_1_1A', 1, {});
+    const resOk = await procesosAmadeusXML('POST', body_Fare_InformativePricingWithoutPNR, 'TIPNRQ_23_1_1A', 1, {});
     const Fare_InformativePricingWithoutPNRResponse = resOk.newJSON["soapenv:Envelope"]["soapenv:Body"][0].Fare_InformativePricingWithoutPNRReply[0].mainGroup;
     for (pricingGroupLevelGroup of Fare_InformativePricingWithoutPNRResponse[0].pricingGroupLevelGroup) {
         /* console.log('pricingGroupLevelGroup: ', pricingGroupLevelGroup.fareInfoGroup[0].fareAmount[0].otherMonetaryDetails); */
@@ -381,8 +381,110 @@ async function Air_SellFromRecommendation(response, session, flight) {
 exports.PNR_AddMultiElements = async (req, res) => {
     const body = req.body;
     console.log('PNR_AddMultiElements: ', body);
-    /* const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
-    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut }); */
+    const PNR_AddMultiElements = {
+        "soapenv:Body": {
+            PNR_AddMultiElements: {
+                pnrActions: [ { optionCode: [ "0" ] } ],
+                travellerInfo: [
+                    {
+                        elementManagementPassenger: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ], segmentName: [ "NM" ] } ],
+                        passengerData: [
+                            {
+                                travellerInformation: [ { traveller: [ { surname: [ "ABRAHI" ], quantity: [ "2" ] } ], passenger: [ { firstName: [ "MIGUEL" ], type: [ "ADT" ], infantIndicator: [ "3" ] } ] } ],
+                                dateOfBirth: [ { dateAndTimeDetails: [ { date: [ "19NOV95" ] } ] } ]
+                            },
+                            {
+                                travellerInformation: [ { traveller: [ { surname: [ "LANCH" ] } ], passenger: [ { firstName: [ "AMAYA" ], type: [ "INF" ] } ] } ],
+                                dateOfBirth: [ { dateAndTimeDetails: [ { date: [ "04MAR23" ] } ] } ]
+                            }
+                        ]
+                    },
+                    {
+                        elementManagementPassenger: [ { reference: [ { qualifier: [ "PR" ], number: [ "2" ] } ], segmentName: [ "NM" ] } ],
+                        passengerData: [
+                            {
+                                travellerInformation: [ { traveller: [ { surname: [ "BARBER" ], quantity: [ "1" ] } ], passenger: [ { firstName: [ "BLANCA" ], type: [ "CNN" ] } ] } ],
+                                dateOfBirth: [ { dateAndTimeDetails: [ { date: [ "22MAY16" ] } ] } ]
+                            }
+                        ]
+                    }
+                ],
+                dataElementsMaster: [
+                    {
+                        marker1: [ "" ],
+                        dataElementsIndiv: [
+                            //Informacion de contacto
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "1" ] } ], segmentName: [ "AP" ] } ],
+                                freetextData: [ { freetextDetail: [ { subjectQualifier: [ "3" ], type: [ "6" ] } ], longFreetext: [ "24231564 + ()" ] } ]
+                            },
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "2" ] } ], segmentName: [ "AP" ] } ],
+                                freetextData: [ { freetextDetail: [ { subjectQualifier: [ "3" ], type: [ "P02" ] } ], longFreetext: [ "MIGUEL_1AWS_TEST@TAYRONA.LATAM.CO" ] } ]
+                            },
+
+                            //Info aerolinea y frequentFlyerNumber
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "3" ] } ], segmentName: [ "SSR" ] } ],
+                                serviceRequest: [
+                                    { ssr: [ { type: [ "FOID" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "LA" ], freetext: [ "NI14545440" ] } ] }
+                                ],
+                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ] } ]
+                            },
+
+                            //
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "4" ] } ], segmentName: [ "SSR" ] } ],
+                                serviceRequest: [
+                                    { ssr: [ { type: [ "DOCS" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "YY" ], freetext: [ "P-COL-14545440-COL-19NOV95-M-28SEP28-ABRAHI-MIGUEL" ] } ] }
+                                ],
+                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ] } ]
+                            },
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "5" ] } ], segmentName: [ "SSR" ] } ],
+                                serviceRequest: [
+                                    { ssr: [ { type: [ "DOCS" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "YY" ], freetext: [ "P-COL-11313120-COL-04MAR23-MI-28SEP28-LANCH-AMAYA" ] } ] }
+                                ],
+                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ] } ]
+                            },
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "13" ] } ], segmentName: [ "TK" ] } ],
+                                ticketElement: [ { ticket: [ { indicator: [ "XL" ], date: [ "040924" ], time: [ "2300" ] } ] } ]
+                            },
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "6" ] } ], segmentName: [ "SSR" ] } ],
+                                serviceRequest: [
+                                    { ssr: [ { type: [ "FOID" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "LA" ], freetext: [ "NI808080" ] } ] }
+                                ],
+                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "2" ] } ] } ]
+                            },
+                            {
+                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "7" ] } ], segmentName: [ "SSR" ] } ],
+                                serviceRequest: [
+                                    { ssr: [ { type: [ "DOCS" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "YY" ], freetext: [ "P-COL-808080-COL-22MAY16-M-28SEP28-BARBER-BLANCA" ] } ] }
+                                ],
+                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "2" ] } ] } ]
+                            },
+                            {
+                                elementManagementData: [ { segmentName: [ "SSR" ] } ],
+                                serviceRequest: [
+                                    { ssr: [ { type: [ "CTCE" ], status: [ "HK" ], companyId: [ "YY" ], freetext: [ "MIGUEL..1AWS..TEST//TAYRONA.LATAM.CO" ] } ] }
+                                ]
+                            },
+                            {
+                                elementManagementData: [ { segmentName: [ "SSR" ] } ],
+                                serviceRequest: [
+                                    { ssr: [ { type: [ "CTCM" ], status: [ "HK" ], companyId: [ "YY" ], freetext: [ "19876543210/US" ] } ] }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+    //const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
+    //res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
     res.end();
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
