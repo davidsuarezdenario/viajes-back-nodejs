@@ -381,100 +381,117 @@ async function Air_SellFromRecommendation(response, session, flight) {
 exports.PNR_AddMultiElements = async (req, res) => {
     const body = req.body;
     console.log('PNR_AddMultiElements: ', body);
+    let travellerInfo = [], dataElementsIndiv = [];
+    for (passenger of body.passengers) {
+        if (passenger.type != 'INF') {
+            const dateParse = parseISO(passenger.dateOfBirth);
+            travellerInfo.push({ elementManagementPassenger: [{ reference: [{ qualifier: ["PR"], number: [passenger.number] }], segmentName: ["NM"] }], passengerData: [ { travellerInformation: [{ traveller: [{ surname: [passenger.surname], quantity: ["1"] }], passenger: [{ firstName: [passenger.name], type: [passenger.type] }] }], dateOfBirth: [{ dateAndTimeDetails: [{ date: [format(dateParse, 'ddMMMyy').toUpperCase()] }] }] } ] });
+        }
+    }
+    for(infant of body.passengers){
+        if (passenger.type == 'INF') {
+            const dateParse = parseISO(infant.dateOfBirth);
+            travellerInfo[infant.number].passengerData[0].travellerInformation[0].traveller[0].quantity[0] = "2";
+            travellerInfo[infant.number].passengerData[0].travellerInformation[0].passenger[0].infantIndicator = ["3"];
+            travellerInfo[infant.number - 1].passengerData.push({ travellerInformation: [{ traveller: [{ surname: [infant.surname], quantity: ["1"] }], passenger: [{ firstName: [infant.name], type: [infant.type] }] }], dateOfBirth: [{ dateAndTimeDetails: [{ date: [format(dateParse, 'ddMMMyy').toUpperCase()] }] }] });
+        }
+    }
+    console.log('travellerInfo: ', travellerInfo);
+    console.log('travellerInfo: ', JSON.stringify(travellerInfo));
     const PNR_AddMultiElements = {
         "soapenv:Body": {
             PNR_AddMultiElements: {
-                pnrActions: [ { optionCode: [ "0" ] } ],
+                pnrActions: [{ optionCode: ["0"] }],
                 travellerInfo: [
                     {
-                        elementManagementPassenger: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ], segmentName: [ "NM" ] } ],
+                        elementManagementPassenger: [{ reference: [{ qualifier: ["PR"], number: ["1"] }], segmentName: ["NM"] }],
                         passengerData: [
                             {
-                                travellerInformation: [ { traveller: [ { surname: [ "ABRAHI" ], quantity: [ "2" ] } ], passenger: [ { firstName: [ "MIGUEL" ], type: [ "ADT" ], infantIndicator: [ "3" ] } ] } ],
-                                dateOfBirth: [ { dateAndTimeDetails: [ { date: [ "19NOV95" ] } ] } ]
+                                travellerInformation: [{ traveller: [{ surname: ["ABRAHI"], quantity: ["2"] }], passenger: [{ firstName: ["MIGUEL"], type: ["ADT"], infantIndicator: ["3"] }] }],
+                                dateOfBirth: [{ dateAndTimeDetails: [{ date: ["19NOV95"] }] }]
                             },
                             {
-                                travellerInformation: [ { traveller: [ { surname: [ "LANCH" ] } ], passenger: [ { firstName: [ "AMAYA" ], type: [ "INF" ] } ] } ],
-                                dateOfBirth: [ { dateAndTimeDetails: [ { date: [ "04MAR23" ] } ] } ]
+                                travellerInformation: [{ traveller: [{ surname: ["LANCH"] }], passenger: [{ firstName: ["AMAYA"], type: ["INF"] }] }],
+                                dateOfBirth: [{ dateAndTimeDetails: [{ date: ["04MAR23"] }] }]
                             }
                         ]
                     },
                     {
-                        elementManagementPassenger: [ { reference: [ { qualifier: [ "PR" ], number: [ "2" ] } ], segmentName: [ "NM" ] } ],
+                        elementManagementPassenger: [{ reference: [{ qualifier: ["PR"], number: ["2"] }], segmentName: ["NM"] }],
                         passengerData: [
                             {
-                                travellerInformation: [ { traveller: [ { surname: [ "BARBER" ], quantity: [ "1" ] } ], passenger: [ { firstName: [ "BLANCA" ], type: [ "CNN" ] } ] } ],
-                                dateOfBirth: [ { dateAndTimeDetails: [ { date: [ "22MAY16" ] } ] } ]
+                                travellerInformation: [{ traveller: [{ surname: ["BARBER"], quantity: ["1"] }], passenger: [{ firstName: ["BLANCA"], type: ["CNN"] }] }],
+                                dateOfBirth: [{ dateAndTimeDetails: [{ date: ["22MAY16"] }] }]
                             }
                         ]
                     }
                 ],
                 dataElementsMaster: [
                     {
-                        marker1: [ "" ],
+                        marker1: [""],
                         dataElementsIndiv: [
                             //Informacion de contacto
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "1" ] } ], segmentName: [ "AP" ] } ],
-                                freetextData: [ { freetextDetail: [ { subjectQualifier: [ "3" ], type: [ "6" ] } ], longFreetext: [ "24231564 + ()" ] } ]
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["1"] }], segmentName: ["AP"] }],
+                                freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["6"] }], longFreetext: ["24231564 + ()"] }]
                             },
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "2" ] } ], segmentName: [ "AP" ] } ],
-                                freetextData: [ { freetextDetail: [ { subjectQualifier: [ "3" ], type: [ "P02" ] } ], longFreetext: [ "MIGUEL_1AWS_TEST@TAYRONA.LATAM.CO" ] } ]
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["AP"] }],
+                                freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P02"] }], longFreetext: ["MIGUEL_1AWS_TEST@TAYRONA.LATAM.CO"] }]
                             },
 
                             //Info aerolinea y frequentFlyerNumber
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "3" ] } ], segmentName: [ "SSR" ] } ],
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["3"] }], segmentName: ["SSR"] }],
                                 serviceRequest: [
-                                    { ssr: [ { type: [ "FOID" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "LA" ], freetext: [ "NI14545440" ] } ] }
+                                    { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: ["LA"], freetext: ["NI14545440"] }] }
                                 ],
-                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ] } ]
+                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
                             },
 
                             //
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "4" ] } ], segmentName: [ "SSR" ] } ],
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["4"] }], segmentName: ["SSR"] }],
                                 serviceRequest: [
-                                    { ssr: [ { type: [ "DOCS" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "YY" ], freetext: [ "P-COL-14545440-COL-19NOV95-M-28SEP28-ABRAHI-MIGUEL" ] } ] }
+                                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-14545440-COL-19NOV95-M-28SEP28-ABRAHI-MIGUEL"] }] }
                                 ],
-                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ] } ]
+                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
                             },
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "5" ] } ], segmentName: [ "SSR" ] } ],
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["5"] }], segmentName: ["SSR"] }],
                                 serviceRequest: [
-                                    { ssr: [ { type: [ "DOCS" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "YY" ], freetext: [ "P-COL-11313120-COL-04MAR23-MI-28SEP28-LANCH-AMAYA" ] } ] }
+                                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-11313120-COL-04MAR23-MI-28SEP28-LANCH-AMAYA"] }] }
                                 ],
-                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "1" ] } ] } ]
+                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
                             },
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "13" ] } ], segmentName: [ "TK" ] } ],
-                                ticketElement: [ { ticket: [ { indicator: [ "XL" ], date: [ "040924" ], time: [ "2300" ] } ] } ]
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["13"] }], segmentName: ["TK"] }],
+                                ticketElement: [{ ticket: [{ indicator: ["XL"], date: ["040924"], time: ["2300"] }] }]
                             },
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "6" ] } ], segmentName: [ "SSR" ] } ],
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["6"] }], segmentName: ["SSR"] }],
                                 serviceRequest: [
-                                    { ssr: [ { type: [ "FOID" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "LA" ], freetext: [ "NI808080" ] } ] }
+                                    { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: ["LA"], freetext: ["NI808080"] }] }
                                 ],
-                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "2" ] } ] } ]
+                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
                             },
                             {
-                                elementManagementData: [ { reference: [ { qualifier: [ "OT" ], number: [ "7" ] } ], segmentName: [ "SSR" ] } ],
+                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["7"] }], segmentName: ["SSR"] }],
                                 serviceRequest: [
-                                    { ssr: [ { type: [ "DOCS" ], status: [ "HK" ], quantity: [ "1" ], companyId: [ "YY" ], freetext: [ "P-COL-808080-COL-22MAY16-M-28SEP28-BARBER-BLANCA" ] } ] }
+                                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-808080-COL-22MAY16-M-28SEP28-BARBER-BLANCA"] }] }
                                 ],
-                                referenceForDataElement: [ { reference: [ { qualifier: [ "PR" ], number: [ "2" ] } ] } ]
+                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
                             },
                             {
-                                elementManagementData: [ { segmentName: [ "SSR" ] } ],
+                                elementManagementData: [{ segmentName: ["SSR"] }],
                                 serviceRequest: [
-                                    { ssr: [ { type: [ "CTCE" ], status: [ "HK" ], companyId: [ "YY" ], freetext: [ "MIGUEL..1AWS..TEST//TAYRONA.LATAM.CO" ] } ] }
+                                    { ssr: [{ type: ["CTCE"], status: ["HK"], companyId: ["YY"], freetext: ["MIGUEL..1AWS..TEST//TAYRONA.LATAM.CO"] }] }
                                 ]
                             },
                             {
-                                elementManagementData: [ { segmentName: [ "SSR" ] } ],
+                                elementManagementData: [{ segmentName: ["SSR"] }],
                                 serviceRequest: [
-                                    { ssr: [ { type: [ "CTCM" ], status: [ "HK" ], companyId: [ "YY" ], freetext: [ "19876543210/US" ] } ] }
+                                    { ssr: [{ type: ["CTCM"], status: ["HK"], companyId: ["YY"], freetext: ["19876543210/US"] }] }
                                 ]
                             }
                         ]
@@ -489,6 +506,7 @@ exports.PNR_AddMultiElements = async (req, res) => {
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
+    c
     const body_FOP_CreateFormOfPayment = {
         FOP_CreateFormOfPayment: [
             {
@@ -569,8 +587,9 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body_Security_SignOut = {
         Security_SignOut: ""
     };
-    const resOk = await procesosAmadeusXML('POST', newBody, 'TFOPCQ_19_2_1A', 0, body.session);
-    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
+    /* const resOk = await procesosAmadeusXML('POST', newBody, 'TFOPCQ_19_2_1A', 0, body.session);
+    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut }); */
+    res.end();
 }
 exports.Fare_PricePNRWithBookingClass = async (req, res) => {
     const body = req.body;
