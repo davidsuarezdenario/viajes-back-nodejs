@@ -1,8 +1,15 @@
 const { format, parseISO } = require("date-fns");
 const fs = require('fs');
-const sql = require("mssql"), requesthttp = require('request'), qs = require('qs'), xml2js = require('xml2js'), builder = new xml2js.Builder(), headerAmadeus = require('../controllers/headerAmadeus'), deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const sql = require("mssql"),
+    requesthttp = require('request'),
+    qs = require('qs'),
+    xml2js = require('xml2js'),
+    builder = new xml2js.Builder(),
+    headerAmadeus = require('../controllers/headerAmadeus'),
+    deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
-let token = '', arrayIata = [];
+let token = '',
+    arrayIata = [];
 
 console.log('arrayIata: ', arrayIata);
 
@@ -35,6 +42,7 @@ exports.searchArrayIata = async (req, res) => {
     /* let result = arrayIata.filter((item) => item.iataCode == iata);
     res.status(200).json({ error: false, data: result }); */
 }
+
 function normalizeString(str) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
@@ -43,9 +51,12 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     const requestedSegmentRef = body.type == 'idaVuelta' ? [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }, { requestedSegmentRef: [{ segRef: ["2"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataTo] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataFrom] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeTo), 'ddMMyy')] }] }] }] : [{ requestedSegmentRef: [{ segRef: ["1"] }], departureLocalization: [{ departurePoint: [{ locationId: [body.iataFrom] }] }], arrivalLocalization: [{ arrivalPointDetails: [{ locationId: [body.iataTo] }] }], timeDetails: [{ firstDateTimeDetail: [{ date: [format(parseISO(body.timeFrom), 'ddMMyy')] }] }] }];
     body.nonStop ? (requestedSegmentRef[0].flightInfo = [{ flightDetail: [{ flightType: ["N"] }] }]) : false;
     let contPax = 1;
-    const paxAdt = await Array.from({ length: body.adult }, () => ({ ref: [(contPax++) + ''] })), paxCnn = await Array.from({ length: body.child }, () => ({ ref: [(contPax++) + ''] })), paxInf = await Array.from({ length: body.infant }, (_, i) => ({ ref: [(i + 1) + ''], infantIndicator: [(i + 1) + ''] }));
+    const paxAdt = await Array.from({ length: body.adult }, () => ({ ref: [(contPax++) + ''] })),
+        paxCnn = await Array.from({ length: body.child }, () => ({ ref: [(contPax++) + ''] })),
+        paxInf = await Array.from({ length: body.infant }, (_, i) => ({ ref: [(i + 1) + ''], infantIndicator: [(i + 1) + ''] }));
     let paxReference = [{ ptc: ["ADT"], traveller: paxAdt }];
-    body.child > 0 ? paxReference.push({ ptc: ["CNN"], traveller: paxCnn }) : false; body.infant > 0 ? paxReference.push({ ptc: ["INF"], traveller: paxInf }) : false;
+    body.child > 0 ? paxReference.push({ ptc: ["CNN"], traveller: paxCnn }) : false;
+    body.infant > 0 ? paxReference.push({ ptc: ["INF"], traveller: paxInf }) : false;
     const bodyNew = { data: { "soapenv:Body": { Fare_MasterPricerTravelBoardSearch: [{ numberOfUnit: [{ unitNumberDetail: [{ numberOfUnits: [body.adult + body.child], typeOfUnit: ["PX"] }, { numberOfUnits: ["250"], typeOfUnit: ["RC"] }] }], paxReference: paxReference, fareOptions: [{ pricingTickInfo: [{ pricingTicketing: [{ priceType: ["ET", "RP", "RU", "TAC"] }] }] }], travelFlightInfo: [{ cabinId: [{ cabin: [body.cabin] }] }], itinerary: requestedSegmentRef }] } } };
     const resOk = await procesosAmadeusXML('POST', bodyNew.data, 'FMPTBQ_23_1_1A', 0, {});
     let result = [];
@@ -88,8 +99,15 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                     });
                                 }
                                 let paxOk = [];
-                                for (paxPtc of recommendation.paxFareProduct) { let travellerDetails = []; for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: pax.ref[0] }); } paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length }); }
-                                for (let i = 0; i < idaTemp.length; i++) { idaTemp[i].rbd = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].rbd[0]; idaTemp[i].avlStatus = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].avlStatus[0]; }
+                                for (paxPtc of recommendation.paxFareProduct) {
+                                    let travellerDetails = [];
+                                    for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: pax.ref[0] }); }
+                                    paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length });
+                                }
+                                for (let i = 0; i < idaTemp.length; i++) {
+                                    idaTemp[i].rbd = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].rbd[0];
+                                    idaTemp[i].avlStatus = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].avlStatus[0];
+                                }
                                 result.push({
                                     id: `${recommendation.itemNumber[0].itemNumberId[0].number[0]}-${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`,
                                     precio: { total: recommendation.recPriceInfo[0].monetaryDetail[0].amount[0], fee: recommendation.recPriceInfo[0].monetaryDetail[1].amount[0] },
@@ -106,7 +124,8 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
             } else if (resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex.length == 2) {
                 for (recommendation of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].recommendation) {
                     for (recommendationSegment of recommendation.segmentFlightRef) {
-                        let idaTemp = [], vueltaTemp = [];
+                        let idaTemp = [],
+                            vueltaTemp = [];
                         for (groupOfFlights of resOk.newJSON['soapenv:Envelope']['soapenv:Body'][0].Fare_MasterPricerTravelBoardSearchReply[0].flightIndex[0].groupOfFlights) {
                             if (recommendationSegment.referencingDetail[0].refNumber[0] == groupOfFlights.propFlightGrDetail[0].flightProposal[0].ref[0]) {
                                 idaTemp = [];
@@ -178,9 +197,19 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                             }
                         }
                         let paxOk = [];
-                        for (paxPtc of recommendation.paxFareProduct) { let travellerDetails = []; for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: pax.ref[0] }); } paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length }); }
-                        for (let i = 0; i < idaTemp.length; i++) { idaTemp[i].rbd = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].rbd[0]; idaTemp[i].avlStatus = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].avlStatus[0]; }
-                        for (let j = 0; j < vueltaTemp.length; j++) { vueltaTemp[j].rbd = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].rbd[0]; vueltaTemp[j].avlStatus = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].avlStatus[0]; }
+                        for (paxPtc of recommendation.paxFareProduct) {
+                            let travellerDetails = [];
+                            for (pax of paxPtc.paxReference[0].traveller) { travellerDetails.push({ measurementValue: pax.ref[0] }); }
+                            paxOk.push({ ptc: paxPtc.paxReference[0].ptc[0], ref: travellerDetails, total: paxPtc.paxReference[0].traveller.length });
+                        }
+                        for (let i = 0; i < idaTemp.length; i++) {
+                            idaTemp[i].rbd = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].rbd[0];
+                            idaTemp[i].avlStatus = recommendation.paxFareProduct[0].fareDetails[0].groupOfFares[i].productInformation[0].cabinProduct[0].avlStatus[0];
+                        }
+                        for (let j = 0; j < vueltaTemp.length; j++) {
+                            vueltaTemp[j].rbd = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].rbd[0];
+                            vueltaTemp[j].avlStatus = recommendation.paxFareProduct[0].fareDetails[1].groupOfFares[j].productInformation[0].cabinProduct[0].avlStatus[0];
+                        }
                         result.push({
                             id: `${recommendation.itemNumber[0].itemNumberId[0].number[0]}-${recommendationSegment.referencingDetail[0].refNumber[0]}-${recommendationSegment.referencingDetail[1].refNumber[0]}`,
                             precio: { total: recommendation.recPriceInfo[0].monetaryDetail[0].amount[0], fee: recommendation.recPriceInfo[0].monetaryDetail[1].amount[0] },
@@ -196,8 +225,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
             } else {
                 res.status(200).json({ error: true, data: { title1: 'Ups', title2: 'No se encontraron vuelos 1', title3: 'Intenta con otros parametros de busqueda.' }, session: {} });
             }
-        }
-        else {
+        } else {
             res.status(200).json({ error: true, data: { title1: 'Ups', title2: 'No se encontraron vuelos 2', title3: 'Intenta con otros parametros de busqueda.' }, session: {} });
         }
     } else {
@@ -206,14 +234,16 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
 }
 exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     const body = req.body;
-    let passengersGroup = [], segmentGroup = [];
+    let passengersGroup = [],
+        segmentGroup = [];
     if (body) {
         let contItem = 0;
         for (pax of body.pax) {
             passengersGroup.push({
                 segmentRepetitionControl: [{
                     segmentControlDetails: [{
-                        quantity: [pax.ptc == "ADT" ? "1" : (pax.ptc == "CNN" ? "2" : "3")], numberOfUnits: [pax.total + '']
+                        quantity: [pax.ptc == "ADT" ? "1" : (pax.ptc == "CNN" ? "2" : "3")],
+                        numberOfUnits: [pax.total + '']
                     }]
                 }],
                 travellersID: [{ travellerDetails: pax.ref }],
@@ -279,7 +309,13 @@ exports.Fare_InformativePricingWithoutPNR = async (req, res) => {
     res.status(200).json({ error: false, data: resOk1.newJSON, fare: resOk1.fare, session: resOk1.dataOut });
 }
 async function Air_SellFromRecommendation(response, session, flight) {
-    let segmentInformationIda = [], quantity = 0, segmentInformationVuelta = [], fare = {}, seats = [], segVuelta = false, body = { session: session };
+    let segmentInformationIda = [],
+        quantity = 0,
+        segmentInformationVuelta = [],
+        fare = {},
+        seats = [],
+        segVuelta = false,
+        body = { session: session };
     for (pricingGroupLevelGroup of response.pricingGroupLevelGroup) {
         if (pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].quantity[0] != '3') {
             quantity = quantity + parseInt(pricingGroupLevelGroup.numberOfPax[0].segmentControlDetails[0].numberOfUnits[0]);
@@ -381,125 +417,126 @@ async function Air_SellFromRecommendation(response, session, flight) {
 exports.PNR_AddMultiElements = async (req, res) => {
     const body = req.body;
     console.log('PNR_AddMultiElements: ', body);
-    let travellerInfo = [], dataElementsIndiv = [];
+    let travellerCont = 2, travellerInfo = [], dataElementsIndiv = [{ elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["1"] }], segmentName: ["AP"] }], freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["6"] }], longFreetext: [`${body.contact.phone} + ()`] }] }, { elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["AP"] }], freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P02"] }], longFreetext: [body.contact.email] }] }];
     for (passenger of body.passengers) {
+        const dateParse = parseISO(passenger.dateOfBirth);
         if (passenger.type != 'INF') {
-            const dateParse = parseISO(passenger.dateOfBirth);
-            travellerInfo.push({ elementManagementPassenger: [{ reference: [{ qualifier: ["PR"], number: [passenger.number] }], segmentName: ["NM"] }], passengerData: [ { travellerInformation: [{ traveller: [{ surname: [passenger.surname], quantity: ["1"] }], passenger: [{ firstName: [passenger.name], type: [passenger.type] }] }], dateOfBirth: [{ dateAndTimeDetails: [{ date: [format(dateParse, 'ddMMMyy').toUpperCase()] }] }] } ] });
+            travellerCont++;
+            travellerInfo.push({ elementManagementPassenger: [{ reference: [{ qualifier: ["PR"], number: [passenger.id + ''] }], segmentName: ["NM"] }], passengerData: [{ travellerInformation: [{ traveller: [{ surname: [passenger.surname], quantity: ["1"] }], passenger: [{ firstName: [passenger.name], type: [passenger.type] }] }], dateOfBirth: [{ dateAndTimeDetails: [{ date: [format(dateParse, 'ddMMMyy').toUpperCase()] }] }] }] });
+            dataElementsIndiv.push({
+                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: [travellerCont + ''] }], segmentName: ["SSR"] }],
+                serviceRequest: [
+                    { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: [body.airline], freetext: [passenger.num_id + ''] }] }
+                ],
+                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: [passenger.id + ''] }] }]
+            });
+            travellerCont++;
+            dataElementsIndiv.push({
+                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: [travellerCont + ''] }], segmentName: ["SSR"] }],
+                serviceRequest: [
+                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: [`${passenger.documentType}-${passenger.nationality}-${passenger.num_id}-${passenger.nationality}-${format(dateParse, 'ddMMMyy').toUpperCase()}-${passenger.gender}-${passenger.surname.toUpperCase()}-${passenger.name.toUpperCase()}`] }] }
+                ],
+                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: [passenger.id + ''] }] }]
+            });
+        } else {
+            dataElementsIndiv.push({
+                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: [travellerCont + ''] }], segmentName: ["SSR"] }],
+                serviceRequest: [
+                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: [`${passenger.documentType}-${passenger.nationality}-${passenger.num_id}-${passenger.nationality}-${format(dateParse, 'ddMMMyy').toUpperCase()}-${passenger.gender}-${passenger.surname.toUpperCase()}-${passenger.name.toUpperCase()}`] }] }
+                ],
+                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: [passenger.number + ''] }] }]
+            });
         }
     }
-    for(infant of body.passengers){
-        if (passenger.type == 'INF') {
+    for (infant of body.passengers) {
+        if (infant.type == 'INF') {
+            travellerCont++;
             const dateParse = parseISO(infant.dateOfBirth);
-            travellerInfo[infant.number].passengerData[0].travellerInformation[0].traveller[0].quantity[0] = "2";
-            travellerInfo[infant.number].passengerData[0].travellerInformation[0].passenger[0].infantIndicator = ["3"];
+            travellerInfo[infant.number - 1].passengerData[0].travellerInformation[0].traveller[0].quantity[0] = "2";
+            travellerInfo[infant.number - 1].passengerData[0].travellerInformation[0].passenger[0].infantIndicator = ["3"];
             travellerInfo[infant.number - 1].passengerData.push({ travellerInformation: [{ traveller: [{ surname: [infant.surname], quantity: ["1"] }], passenger: [{ firstName: [infant.name], type: [infant.type] }] }], dateOfBirth: [{ dateAndTimeDetails: [{ date: [format(dateParse, 'ddMMMyy').toUpperCase()] }] }] });
         }
     }
-    console.log('travellerInfo: ', travellerInfo);
     console.log('travellerInfo: ', JSON.stringify(travellerInfo));
+    console.log('travellerInfo: ', JSON.stringify(dataElementsIndiv));
+    console.log('travellerInfo: ', travellerInfo.length);
     const PNR_AddMultiElements = {
         "soapenv:Body": {
             PNR_AddMultiElements: {
                 pnrActions: [{ optionCode: ["0"] }],
-                travellerInfo: [
-                    {
-                        elementManagementPassenger: [{ reference: [{ qualifier: ["PR"], number: ["1"] }], segmentName: ["NM"] }],
-                        passengerData: [
-                            {
-                                travellerInformation: [{ traveller: [{ surname: ["ABRAHI"], quantity: ["2"] }], passenger: [{ firstName: ["MIGUEL"], type: ["ADT"], infantIndicator: ["3"] }] }],
-                                dateOfBirth: [{ dateAndTimeDetails: [{ date: ["19NOV95"] }] }]
-                            },
-                            {
-                                travellerInformation: [{ traveller: [{ surname: ["LANCH"] }], passenger: [{ firstName: ["AMAYA"], type: ["INF"] }] }],
-                                dateOfBirth: [{ dateAndTimeDetails: [{ date: ["04MAR23"] }] }]
-                            }
-                        ]
-                    },
-                    {
-                        elementManagementPassenger: [{ reference: [{ qualifier: ["PR"], number: ["2"] }], segmentName: ["NM"] }],
-                        passengerData: [
-                            {
-                                travellerInformation: [{ traveller: [{ surname: ["BARBER"], quantity: ["1"] }], passenger: [{ firstName: ["BLANCA"], type: ["CNN"] }] }],
-                                dateOfBirth: [{ dateAndTimeDetails: [{ date: ["22MAY16"] }] }]
-                            }
-                        ]
-                    }
-                ],
-                dataElementsMaster: [
-                    {
-                        marker1: [""],
-                        dataElementsIndiv: [
-                            //Informacion de contacto
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["1"] }], segmentName: ["AP"] }],
-                                freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["6"] }], longFreetext: ["24231564 + ()"] }]
-                            },
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["AP"] }],
-                                freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P02"] }], longFreetext: ["MIGUEL_1AWS_TEST@TAYRONA.LATAM.CO"] }]
-                            },
+                travellerInfo: travellerInfo,
+                dataElementsMaster: [{
+                    marker1: [""],
+                    dataElementsIndiv: [
+                        //Informacion de contacto
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["1"] }], segmentName: ["AP"] }],
+                            freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["6"] }], longFreetext: [`${body.contact.phone} + ()`] }]
+                        },
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["AP"] }],
+                            freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P02"] }], longFreetext: [body.contact.email] }]
+                        },
 
-                            //Info aerolinea y frequentFlyerNumber
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["3"] }], segmentName: ["SSR"] }],
-                                serviceRequest: [
-                                    { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: ["LA"], freetext: ["NI14545440"] }] }
-                                ],
-                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
-                            },
-
-                            //
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["4"] }], segmentName: ["SSR"] }],
-                                serviceRequest: [
-                                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-14545440-COL-19NOV95-M-28SEP28-ABRAHI-MIGUEL"] }] }
-                                ],
-                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
-                            },
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["5"] }], segmentName: ["SSR"] }],
-                                serviceRequest: [
-                                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-11313120-COL-04MAR23-MI-28SEP28-LANCH-AMAYA"] }] }
-                                ],
-                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
-                            },
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["13"] }], segmentName: ["TK"] }],
-                                ticketElement: [{ ticket: [{ indicator: ["XL"], date: ["040924"], time: ["2300"] }] }]
-                            },
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["6"] }], segmentName: ["SSR"] }],
-                                serviceRequest: [
-                                    { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: ["LA"], freetext: ["NI808080"] }] }
-                                ],
-                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
-                            },
-                            {
-                                elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["7"] }], segmentName: ["SSR"] }],
-                                serviceRequest: [
-                                    { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-808080-COL-22MAY16-M-28SEP28-BARBER-BLANCA"] }] }
-                                ],
-                                referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
-                            },
-                            {
-                                elementManagementData: [{ segmentName: ["SSR"] }],
-                                serviceRequest: [
-                                    { ssr: [{ type: ["CTCE"], status: ["HK"], companyId: ["YY"], freetext: ["MIGUEL..1AWS..TEST//TAYRONA.LATAM.CO"] }] }
-                                ]
-                            },
-                            {
-                                elementManagementData: [{ segmentName: ["SSR"] }],
-                                serviceRequest: [
-                                    { ssr: [{ type: ["CTCM"], status: ["HK"], companyId: ["YY"], freetext: ["19876543210/US"] }] }
-                                ]
-                            }
-                        ]
-                    }
-                ]
+                        //Info aerolinea y frequentFlyerNumber
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["4"] }], segmentName: ["SSR"] }],
+                            serviceRequest: [
+                                { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-14545440-COL-19NOV95-M-28SEP28-ABRAHI-MIGUEL"] }] }
+                            ],
+                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
+                        },
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["5"] }], segmentName: ["SSR"] }],
+                            serviceRequest: [
+                                { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-11313120-COL-04MAR23-MI-28SEP28-LANCH-AMAYA"] }] }
+                            ],
+                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
+                        },
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["3"] }], segmentName: ["SSR"] }],
+                            serviceRequest: [
+                                { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: [body.airline], freetext: ["NI14545440"] }] }
+                            ],
+                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
+                        },
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["13"] }], segmentName: ["TK"] }],
+                            ticketElement: [{ ticket: [{ indicator: ["XL"], date: ["040924"], time: ["2300"] }] }]
+                        },
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["6"] }], segmentName: ["SSR"] }],
+                            serviceRequest: [
+                                { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: ["LA"], freetext: ["NI808080"] }] }
+                            ],
+                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
+                        },
+                        {
+                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["7"] }], segmentName: ["SSR"] }],
+                            serviceRequest: [
+                                { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-808080-COL-22MAY16-M-28SEP28-BARBER-BLANCA"] }] }
+                            ],
+                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
+                        },
+                        {
+                            elementManagementData: [{ segmentName: ["SSR"] }],
+                            serviceRequest: [
+                                { ssr: [{ type: ["CTCE"], status: ["HK"], companyId: ["YY"], freetext: ["MIGUEL..1AWS..TEST//TAYRONA.LATAM.CO"] }] }
+                            ]
+                        },
+                        {
+                            elementManagementData: [{ segmentName: ["SSR"] }],
+                            serviceRequest: [
+                                { ssr: [{ type: ["CTCM"], status: ["HK"], companyId: ["YY"], freetext: ["19876543210/US"] }] }
+                            ]
+                        }
+                    ]
+                }]
             }
         }
     }
+    /* console.log('travellerInfo: ', PNR_AddMultiElements);
+    console.log('travellerInfo: ', JSON.stringify(PNR_AddMultiElements)); */
     //const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
     //res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
     res.end();
@@ -508,42 +545,30 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
     c
     const body_FOP_CreateFormOfPayment = {
-        FOP_CreateFormOfPayment: [
-            {
-                transactionContext: [{ transactionDetails: [{ code: ["FP"] }] }],
-                fopGroup: [
-                    {
-                        fopReference: [""],
-                        mopDescription: [
-                            {
-                                fopSequenceNumber: [{ sequenceDetails: [{ number: ["1"] }] }],
-                                mopDetails: [{ fopPNRDetails: [{ fopDetails: [{ fopCode: [`${body.data.typeCard}${body.data.vendorCode}`] }] }] }],
-                                paymentModule: [
-                                    {
-                                        groupUsage: [{ attributeDetails: [{ attributeType: ["FP"] }] }],
-                                        mopInformation: [
-                                            {
-                                                fopInformation: [{ formOfPayment: [{ type: [body.data.typeCard] }] }],
-                                                dummy: [""],
-                                                creditCardData: [{ creditCardDetails: [{ ccInfo: [{ vendorCode: [body.data.vendorCode], cardNumber: [body.data.cardNumber], securityId: [body.data.securityCode], expiryDate: [body.data.expiryDate] }] }] }]
-                                            }
-                                        ],
-                                        dummy: [""],
-                                        mopDetailedData: [
-                                            {
-                                                fopInformation: [{ formOfPayment: [{ type: [body.data.typeCard] }] }],
-                                                dummy: [""],
-                                                creditCardDetailedData: [{ authorisationSupplementaryData: [""], approvalDetails: [{ approvalCodeData: [{ approvalCode: [body.data.approvalCode], sourceOfApproval: ["M"] }] }] }]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
+        FOP_CreateFormOfPayment: [{
+            transactionContext: [{ transactionDetails: [{ code: ["FP"] }] }],
+            fopGroup: [{
+                fopReference: [""],
+                mopDescription: [{
+                    fopSequenceNumber: [{ sequenceDetails: [{ number: ["1"] }] }],
+                    mopDetails: [{ fopPNRDetails: [{ fopDetails: [{ fopCode: [`${body.data.typeCard}${body.data.vendorCode}`] }] }] }],
+                    paymentModule: [{
+                        groupUsage: [{ attributeDetails: [{ attributeType: ["FP"] }] }],
+                        mopInformation: [{
+                            fopInformation: [{ formOfPayment: [{ type: [body.data.typeCard] }] }],
+                            dummy: [""],
+                            creditCardData: [{ creditCardDetails: [{ ccInfo: [{ vendorCode: [body.data.vendorCode], cardNumber: [body.data.cardNumber], securityId: [body.data.securityCode], expiryDate: [body.data.expiryDate] }] }] }]
+                        }],
+                        dummy: [""],
+                        mopDetailedData: [{
+                            fopInformation: [{ formOfPayment: [{ type: [body.data.typeCard] }] }],
+                            dummy: [""],
+                            creditCardDetailedData: [{ authorisationSupplementaryData: [""], approvalDetails: [{ approvalCodeData: [{ approvalCode: [body.data.approvalCode], sourceOfApproval: ["M"] }] }] }]
+                        }]
+                    }]
+                }]
+            }]
+        }]
     };
     const body_Fare_PricePNRWithBookingClass = {
         Fare_PricePNRWithBookingClass: {
@@ -567,21 +592,18 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body_PNR_AddMultiElements = {
         PNR_AddMultiElements: {
             pnrActions: [{ optionCode: ["11"] }],
-            dataElementsMaster: [
+            dataElementsMaster: [{
+                marker1: [""],
+                dataElementsIndiv: [{
+                    elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["TK"] }],
+                    ticketElement: [{ ticket: [{ indicator: ["OK"] }] }]
+                },
                 {
-                    marker1: [""],
-                    dataElementsIndiv: [
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["TK"] }],
-                            ticketElement: [{ ticket: [{ indicator: ["OK"] }] }]
-                        },
-                        {
-                            elementManagementData: [{ segmentName: ["RF"] }],
-                            freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P22"] }], longFreetext: ["Tayrona - Application"] }]
-                        }
-                    ]
+                    elementManagementData: [{ segmentName: ["RF"] }],
+                    freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P22"] }], longFreetext: ["Tayrona - Application"] }]
                 }
-            ]
+                ]
+            }]
         }
     };
     const body_Security_SignOut = {
@@ -631,7 +653,10 @@ async function procesosAmadeusXML(method, body, action, type, session) {
                 await saveXml(response.body, action + '_response');
                 const newJSON = await xml2json(response.body);
                 /* console.log(newJSON); */
-                headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0]; headerOk.dataOut.sequenceNumber = `${parseInt(newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]) + 1}`; headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0]; headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
+                headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0];
+                headerOk.dataOut.sequenceNumber = `${parseInt(newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]) + 1}`;
+                headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0];
+                headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
                 /* console.log('headerOk: ', headerOk.dataOut); */
                 resolve({ newJSON: newJSON, dataOut: headerOk.dataOut });
             }
@@ -639,7 +664,16 @@ async function procesosAmadeusXML(method, body, action, type, session) {
     });
 }
 async function getToken() {
-    return new Promise((resolve, reject) => { const body = qs.stringify({ 'grant_type': 'client_credentials', 'client_id': 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', 'client_secret': 'N0hFslmwu3zpofYQ' }); const options = { method: 'post', url: authentication.url + 'v1/security/oauth2/token', headers: { 'Content-type': 'application/x-www-form-urlencoded' }, body: body, json: true }; requesthttp(options, async (error, response, body) => { if (error) { reject(false); } else { token = response.body.access_token; resolve(true); } }) });
+    return new Promise((resolve, reject) => {
+        const body = qs.stringify({ 'grant_type': 'client_credentials', 'client_id': 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', 'client_secret': 'N0hFslmwu3zpofYQ' });
+        const options = { method: 'post', url: authentication.url + 'v1/security/oauth2/token', headers: { 'Content-type': 'application/x-www-form-urlencoded' }, body: body, json: true };
+        requesthttp(options, async (error, response, body) => {
+            if (error) { reject(false); } else {
+                token = response.body.access_token;
+                resolve(true);
+            }
+        })
+    });
 }
 async function procesosAmadeus(path, method, body) {
     return new Promise((resolve, reject) => {
@@ -656,7 +690,8 @@ async function procesosAmadeus(path, method, body) {
 }
 async function xml2json(xml) {
     return new Promise((resolve, reject) => {
-        const parser = new xml2js.Parser(); parser.parseString(xml, function (err, result) { resolve(result); });
+        const parser = new xml2js.Parser();
+        parser.parseString(xml, function (err, result) { resolve(result); });
     });
 }
 async function json2xml(json) {
@@ -664,6 +699,7 @@ async function json2xml(json) {
         resolve((builder.buildObject(json)).replace(deleteText, ''));
     });
 }
+
 function saveXml(string, nombre) {
     return new Promise((resolve, reject) => {
         const filePath = `./files_xml/${nombre}.xml`;
