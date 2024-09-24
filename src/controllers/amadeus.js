@@ -1,15 +1,8 @@
 const { format, parseISO } = require("date-fns");
 const fs = require('fs');
-const sql = require("mssql"),
-    requesthttp = require('request'),
-    qs = require('qs'),
-    xml2js = require('xml2js'),
-    builder = new xml2js.Builder(),
-    headerAmadeus = require('../controllers/headerAmadeus'),
-    deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const sql = require("mssql"), requesthttp = require('request'), qs = require('qs'), xml2js = require('xml2js'), builder = new xml2js.Builder(), headerAmadeus = require('../controllers/headerAmadeus'), wanderlust = require('../controllers/wanderlust'), deleteText = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const authentication = { url: 'https://test.api.amadeus.com/', client_id: 'RBc7Aa3hYxfErGfTuLYqyoeNU1xqFW25', client_secret: 'N0hFslmwu3zpofYQ' }; //Pruebas
-let token = '',
-    arrayIata = [];
+let token = '', arrayIata = [];
 
 console.log('arrayIata: ', arrayIata);
 
@@ -408,16 +401,16 @@ async function Air_SellFromRecommendation(response, session, flight) {
     }
     return { newJSON: { seats: seats, message: airSellFromRecommendationResponse.newJSON['soapenv:Envelope']['soapenv:Body'][0].Air_SellFromRecommendationReply[0].message[0].messageFunctionDetails[0].messageFunction[0] }, fare: fare, dataOut: airSellFromRecommendationResponse.dataOut };
 }
-/* exports.Air_SellFromRecommendation = async (req, res) => {
-    const body = req.body;
-    console.log('Air_SellFromRecommendation: ', body);
-    const resOk = await procesosAmadeusXML('POST', body.data, 'ITAREQ_05_2_IA', 2, body.session);
-    res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
-} */
 exports.PNR_AddMultiElements = async (req, res) => {
-    const body = req.body;
+    const body = req.body.data, session = req.body.session;
     console.log('PNR_AddMultiElements: ', body);
-    let travellerCont = 2, travellerInfo = [], dataElementsIndiv = [{ elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["1"] }], segmentName: ["AP"] }], freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["6"] }], longFreetext: [`${body.contact.phone} + ()`] }] }, { elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["AP"] }], freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P02"] }], longFreetext: [body.contact.email] }] }];
+    let travellerCont = 2, travellerInfo = [],
+        dataElementsIndiv = [
+            { elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["1"] }], segmentName: ["AP"] }], freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["6"] }], longFreetext: [body.contact.phone] }] },
+            { elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["AP"] }], freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P02"] }], longFreetext: [body.contact.email] }] },
+            { elementManagementData: [{ segmentName: ["SSR"] }], serviceRequest: [{ ssr: [{ type: ["CTCM"], status: ["HK"], companyId: ["YY"], freetext: [body.contact.phone + ''] }] }] },
+            { elementManagementData: [{ segmentName: ["SSR"] }], serviceRequest: [{ ssr: [{ type: ["CTCE"], status: ["HK"], companyId: ["YY"], freetext: [(body.contact.email).replace("@", "//")] }] }] }
+        ];
     for (passenger of body.passengers) {
         const dateParse = parseISO(passenger.dateOfBirth);
         if (passenger.type != 'INF') {
@@ -460,90 +453,17 @@ exports.PNR_AddMultiElements = async (req, res) => {
     console.log('travellerInfo: ', JSON.stringify(travellerInfo));
     console.log('travellerInfo: ', JSON.stringify(dataElementsIndiv));
     console.log('travellerInfo: ', travellerInfo.length);
-    const PNR_AddMultiElements = {
-        "soapenv:Body": {
-            PNR_AddMultiElements: {
-                pnrActions: [{ optionCode: ["0"] }],
-                travellerInfo: travellerInfo,
-                dataElementsMaster: [{
-                    marker1: [""],
-                    dataElementsIndiv: [
-                        //Informacion de contacto
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["1"] }], segmentName: ["AP"] }],
-                            freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["6"] }], longFreetext: [`${body.contact.phone} + ()`] }]
-                        },
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["2"] }], segmentName: ["AP"] }],
-                            freetextData: [{ freetextDetail: [{ subjectQualifier: ["3"], type: ["P02"] }], longFreetext: [body.contact.email] }]
-                        },
-
-                        //Info aerolinea y frequentFlyerNumber
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["4"] }], segmentName: ["SSR"] }],
-                            serviceRequest: [
-                                { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-14545440-COL-19NOV95-M-28SEP28-ABRAHI-MIGUEL"] }] }
-                            ],
-                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
-                        },
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["5"] }], segmentName: ["SSR"] }],
-                            serviceRequest: [
-                                { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-11313120-COL-04MAR23-MI-28SEP28-LANCH-AMAYA"] }] }
-                            ],
-                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
-                        },
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["3"] }], segmentName: ["SSR"] }],
-                            serviceRequest: [
-                                { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: [body.airline], freetext: ["NI14545440"] }] }
-                            ],
-                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["1"] }] }]
-                        },
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["13"] }], segmentName: ["TK"] }],
-                            ticketElement: [{ ticket: [{ indicator: ["XL"], date: ["040924"], time: ["2300"] }] }]
-                        },
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["6"] }], segmentName: ["SSR"] }],
-                            serviceRequest: [
-                                { ssr: [{ type: ["FOID"], status: ["HK"], quantity: ["1"], companyId: ["LA"], freetext: ["NI808080"] }] }
-                            ],
-                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
-                        },
-                        {
-                            elementManagementData: [{ reference: [{ qualifier: ["OT"], number: ["7"] }], segmentName: ["SSR"] }],
-                            serviceRequest: [
-                                { ssr: [{ type: ["DOCS"], status: ["HK"], quantity: ["1"], companyId: ["YY"], freetext: ["P-COL-808080-COL-22MAY16-M-28SEP28-BARBER-BLANCA"] }] }
-                            ],
-                            referenceForDataElement: [{ reference: [{ qualifier: ["PR"], number: ["2"] }] }]
-                        },
-                        {
-                            elementManagementData: [{ segmentName: ["SSR"] }],
-                            serviceRequest: [
-                                { ssr: [{ type: ["CTCE"], status: ["HK"], companyId: ["YY"], freetext: ["MIGUEL..1AWS..TEST//TAYRONA.LATAM.CO"] }] }
-                            ]
-                        },
-                        {
-                            elementManagementData: [{ segmentName: ["SSR"] }],
-                            serviceRequest: [
-                                { ssr: [{ type: ["CTCM"], status: ["HK"], companyId: ["YY"], freetext: ["19876543210/US"] }] }
-                            ]
-                        }
-                    ]
-                }]
-            }
-        }
-    }
+    const body_PNR_AddMultiElements_1 = { "soapenv:Body": { PNR_AddMultiElements: { pnrActions: [{ optionCode: ["11"] }], travellerInfo: travellerInfo, dataElementsMaster: [{ marker1: [""], dataElementsIndiv: dataElementsIndiv }] } } };
+    const resOk = await procesosAmadeusXML('POST', body_PNR_AddMultiElements_1, 'PNRADD_21_1_1A', 2, session);
+    wanderlust.localSaveBookingId({ body: body, session: session });
+    console.log('travellerInfo: ', resOk.newJSON);
     /* console.log('travellerInfo: ', PNR_AddMultiElements);
     console.log('travellerInfo: ', JSON.stringify(PNR_AddMultiElements)); */
-    //const resOk = await procesosAmadeusXML('POST', body.data, 'PNRADD_21_1_1A', 0, {});
-    //res.status(200).json({ error: false, data: resOk.newJSON, session: resOk.dataOut });
-    res.end();
+    res.status(200).json({ error: (resOk.dataOut.securityToken == null || resOk.dataOut.sessionId == null || resOk.dataOut.transaction == null) ? true: false, data: resOk.newJSON, session: resOk.dataOut });
+    //res.end();
 }
 exports.FOP_CreateFormOfPayment = async (req, res) => {
     const body = req.body;
-    c
     const body_FOP_CreateFormOfPayment = {
         FOP_CreateFormOfPayment: [{
             transactionContext: [{ transactionDetails: [{ code: ["FP"] }] }],
@@ -589,7 +509,7 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
             ]
         }
     };
-    const body_PNR_AddMultiElements = {
+    const body_PNR_AddMultiElements_2 = {
         PNR_AddMultiElements: {
             pnrActions: [{ optionCode: ["11"] }],
             dataElementsMaster: [{
@@ -653,10 +573,10 @@ async function procesosAmadeusXML(method, body, action, type, session) {
                 await saveXml(response.body, action + '_response');
                 const newJSON = await xml2json(response.body);
                 /* console.log(newJSON); */
-                headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SecurityToken'][0];
-                headerOk.dataOut.sequenceNumber = `${parseInt(newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SequenceNumber'][0]) + 1}`;
-                headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['awsse:SessionId'][0];
-                headerOk.dataOut.transaction = newJSON['soapenv:Envelope']['soapenv:Header'][0]['awsse:Session'][0]['$'].TransactionStatusCode;
+                headerOk.dataOut.securityToken = newJSON['soapenv:Envelope']?.['soapenv:Header']?.[0]?.['awsse:Session']?.[0]?.['awsse:SecurityToken']?.[0] ?? null;
+                headerOk.dataOut.sequenceNumber = `${parseInt(newJSON['soapenv:Envelope']?.['soapenv:Header']?.[0]?.['awsse:Session']?.[0]?.['awsse:SequenceNumber']?.[0] ?? '-1') + 1}`;
+                headerOk.dataOut.sessionId = newJSON['soapenv:Envelope']?.['soapenv:Header']?.[0]?.['awsse:Session']?.[0]?.['awsse:SessionId']?.[0] ?? null;
+                headerOk.dataOut.transaction = newJSON['soapenv:Envelope']?.['soapenv:Header']?.[0]?.['awsse:Session']?.[0]?.['$']?.TransactionStatusCode ?? null;
                 /* console.log('headerOk: ', headerOk.dataOut); */
                 resolve({ newJSON: newJSON, dataOut: headerOk.dataOut });
             }
