@@ -379,7 +379,8 @@ exports.PNR_AddMultiElements = async (req, res) => {
     const body = querypnrAddMultiElementsBuilder.createPNRAddMultiElements(data);
     // const action = 'PNR_AddMultiElements';
     const action = 'PNRADD_21_1_1A';
-    const type = 0; // o el tipo adecuado para la solicitud
+    const type = 2; // o el tipo adecuado para la solicitud
+    // const session = { sessionId:'01K570O3EC' };
     const session = { /* información de sesión, si es necesaria */ };
     const response = await procesosAmadeusXML(method, body, action, type, session);
     
