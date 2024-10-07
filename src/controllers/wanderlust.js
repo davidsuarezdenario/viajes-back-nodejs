@@ -25,6 +25,21 @@ exports.saveBookingId = async (req, res) => {
         res.status(400).json({ error: true, data: err });
     });
 }
+async function localSaveBookingId(datos) {
+    const data = datos.body;
+    const request = new sql.Request(), timestamp = Date.now();
+    console.log('data: ', data);
+    const textSql = `INSERT INTO BookingReserves (Id, CreateDate, RoundTrip, DescriptionReserve, Document, EntireName, Email, Phone, Amount, StatusReserve, DataFlight) OUTPUT inserted.Id VALUES
+    ('${(data.passengers[0].num_id).trim()}-${timestamp}', GETDATE(), ${data.itinerary.oneWay == 'idaVuelta' ? 1 : 0}, '${(`${data.itinerary.from} - ${data.itinerary.to}`).trim()}', '${(data.passengers[0].num_id).trim()}', '${(data.passengers[0].name + data.passengers[0].surname).trim()}', '${(data.contact.email).trim()}', '${data.contact.phone}', 222, 1, '${(JSON.stringify(datos)).trim()}')`;
+    console.log('textSql: ', textSql);
+    request.query(textSql).then(result => {
+        return true;
+    }).catch(err => {
+        //request.query(`DECLARE @maxVal INT; SELECT @maxVal=(SELECT COUNT(*) FROM BookingFlights); DBCC CHECKIDENT(BookingFlights, RESEED, @maxVal)`);
+        return false;
+    });
+}
+module.exports.localSaveBookingId = localSaveBookingId;
 exports.endingBookingId = async (req, res) => {
     const request = new sql.Request(), data = req.body;
     const textSql = `UPDATE BookingReserves SET UpdateDate=GETDATE(), StatusReserve=2, NumSolCredito=${data.credito.id}, NumSolDenarios=${data.puntos.id} WHERE Id='${data.data.Id}'`;
