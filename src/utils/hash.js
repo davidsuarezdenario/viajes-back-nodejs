@@ -12,6 +12,7 @@ exports.hashPassword = async (plainPassword) => {
 };
 
 exports.comparePassword = async (plainPassword, hashPassword) => {
+  //console.log('plain: ', await bcrypt.hash(plainPassword, saltRounds));
   try {
     const result = await bcrypt.compare(plainPassword, hashPassword);
     return result;
