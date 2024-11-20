@@ -490,6 +490,7 @@ exports.FOP_CreateFormOfPayment = async (req, res) => {
             }]
         }]
     };
+    const resOk_FOP_CreateFormOfPayment = await procesosAmadeusXML('POST', body_FOP_CreateFormOfPayment, 'PNRADD_21_1_1A', 2, body.session);
     const body_Fare_PricePNRWithBookingClass = {
         Fare_PricePNRWithBookingClass: {
             pricingOptionGroup: [
