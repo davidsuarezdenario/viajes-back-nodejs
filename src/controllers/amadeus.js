@@ -35,22 +35,25 @@ exports.searchArrayIata = async (req, res) => {
     res.status(200).json({ error: false, data: result }); */
 }
 exports.fare_search = async (req, res) => {
-    const body = req.body, bodyOk = {
+    const body = req.body;
+    let bodyOk = {
         departureLocation: body.iataFrom,
         arrivalLocation: body.iataTo,
-        date: body.timeFrom,
+        dateArrival: body.timeFrom,
         passengers: [
             { type: "ADT", count: body.adult },
             { type: "CNN", count: body.child },
             { type: "INF", count: body.infant }
         ]
     };
+    if (body.timeTo) bodyOk.dateDeparture = body.timeTo;
     const response = await procesosAmadeus('fare-search', 'POST', bodyOk);
     let result = [];
     if (response.response.recommendation) {
         if ((response.response.recommendation).length > 0) {
             /* response.response.flightIndex = response.response.flightIndex.requestedSegmentRef ? [response.response.flightIndex] : Object.keys(response.response.flightIndex).map(key => response.response.flightIndex[key]); */
             response.response.flightIndex = response.response.flightIndex.requestedSegmentRef ? [response.response.flightIndex] : convertObjectToArray(response.response.flightIndex);
+            console.log('response: ', response.response.flightIndex);
             if (response.response.flightIndex.length == 1) {
                 /* if (response.response.flightIndex) { */
                 for (recommendation of response.response.recommendation) {
