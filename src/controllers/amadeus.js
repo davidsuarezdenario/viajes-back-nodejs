@@ -34,38 +34,7 @@ exports.searchArrayIata = async (req, res) => {
     /* let result = arrayIata.filter((item) => item.iataCode == iata);
     res.status(200).json({ error: false, data: result }); */
 }
-function normalizeString(str) {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-exports.Fare_MasterPricerTravelBoardSearch11 = async (req, res) => {
-    const flightDetails = {
-        flightInformation: {
-            productDateTime: {
-                dateOfDeparture: '281224',
-                timeOfDeparture: '0700',
-                dateOfArrival: '281224',
-                timeOfArrival: '0910'
-            },
-            location: [
-                { locationId: 'MAD', terminal: '4' },
-                { locationId: 'BCN', terminal: '1' }
-            ],
-            companyId: { marketingCarrier: 'IB', operatingCarrier: 'IB' },
-            flightOrtrainNumber: '592',
-            productDetail: { equipmentType: '321' },
-            addProductDetail: { electronicTicketing: 'Y', productDetailQualifier: 'AVR' },
-            attributeDetails: { attributeType: 'EFT', attributeDescription: '0210' }
-        }
-    };
-
-    const flightDetailsArray = convertObjectToArray(flightDetails);
-    console.log(flightDetailsArray);
-    res.end();
-}
-function convertObjectToArray(obj) {
-    return Object.keys(obj).map(key => obj[key]);
-}
-exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
+exports.fare_search = async (req, res) => {
     const body = req.body, bodyOk = {
         departureLocation: body.iataFrom,
         arrivalLocation: body.iataTo,
@@ -80,17 +49,18 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     let result = [];
     if (response.response.recommendation) {
         if ((response.response.recommendation).length > 0) {
-            response.response.flightIndex = response.response.flightIndex.requestedSegmentRef ? [response.response.flightIndex] : Object.keys(response.response.flightIndex).map(key => response.response.flightIndex[key]);
+            /* response.response.flightIndex = response.response.flightIndex.requestedSegmentRef ? [response.response.flightIndex] : Object.keys(response.response.flightIndex).map(key => response.response.flightIndex[key]); */
+            response.response.flightIndex = response.response.flightIndex.requestedSegmentRef ? [response.response.flightIndex] : convertObjectToArray(response.response.flightIndex);
             if (response.response.flightIndex.length == 1) {
                 /* if (response.response.flightIndex) { */
                 for (recommendation of response.response.recommendation) {
-                    recommendation.segmentFlightRef = recommendation.segmentFlightRef.referencingDetail ? [recommendation.segmentFlightRef] : Object.keys(recommendation.segmentFlightRef).map(key => recommendation.segmentFlightRef[key]);
+                    recommendation.segmentFlightRef = recommendation.segmentFlightRef.referencingDetail ? [recommendation.segmentFlightRef] : convertObjectToArray(recommendation.segmentFlightRef);
                     for (recommendationSegment of recommendation.segmentFlightRef) {
                         /* response.response.flightIndex[0].groupOfFlights = response.response.flightIndex[0].groupOfFlights.flightDetails ? [response.response.flightIndex[0].groupOfFlights] : Object.keys(response.response.flightIndex[0].groupOfFlights).map(key => response.response.flightIndex[0].groupOfFlights[key]); */
                         for (groupOfFlights of response.response.flightIndex[0].groupOfFlights) {
                             if (recommendation.segmentFlightRef[0].referencingDetail[0].refNumber == groupOfFlights.propFlightGrDetail.flightProposal[0].ref) {
                                 let idaTemp = [];
-                                groupOfFlights.flightDetails = groupOfFlights.flightDetails.flightInformation ? [groupOfFlights.flightDetails] : Object.keys(groupOfFlights.flightDetails).map(key => groupOfFlights.flightDetails[key]);
+                                groupOfFlights.flightDetails = groupOfFlights.flightDetails.flightInformation ? [groupOfFlights.flightDetails] : convertObjectToArray(groupOfFlights.flightDetails);
                                 for (flightDetails of groupOfFlights.flightDetails) {
                                     idaTemp.push({
                                         iataFrom: flightDetails.flightInformation.location[0].locationId,
@@ -128,7 +98,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                                     travellerDetails.push({ measurementValue: paxPtc.paxReference.traveller.ref });
                                     paxOk.push({ ptc: paxPtc.paxReference.ptc[0], ref: travellerDetails, total: paxPtc.paxReference.traveller.length });
                                 }
-                                recommendation.paxFareProduct[0].fareDetails.groupOfFares = recommendation.paxFareProduct[0].fareDetails.groupOfFares.productInformation ? [recommendation.paxFareProduct[0].fareDetails.groupOfFares] : Object.keys(recommendation.paxFareProduct[0].fareDetails.groupOfFares).map(key => recommendation.paxFareProduct[0].fareDetails.groupOfFares[key]);
+                                recommendation.paxFareProduct[0].fareDetails.groupOfFares = recommendation.paxFareProduct[0].fareDetails.groupOfFares.productInformation ? [recommendation.paxFareProduct[0].fareDetails.groupOfFares] : convertObjectToArray(recommendation.paxFareProduct[0].fareDetails.groupOfFares);
                                 for (let i = 0; i < idaTemp.length; i++) {
                                     idaTemp[i].rbd = recommendation.paxFareProduct[0].fareDetails.groupOfFares[i].productInformation.cabinProduct.rbd;
                                     idaTemp[i].avlStatus = recommendation.paxFareProduct[0].fareDetails.groupOfFares[i].productInformation.cabinProduct.avlStatus;
@@ -145,17 +115,17 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                         }
                     }
                 }
-                res.status(200).json({ error: false, data: result, session: {} });
+                res.status(200).json({ error: false, data: result, session: response });
             } else if (response.response.flightIndex.length == 2) {
                 for (recommendation of response.response.recommendation) {
-                    recommendation.segmentFlightRef = recommendation.segmentFlightRef.referencingDetail ? [recommendation.segmentFlightRef] : Object.keys(recommendation.segmentFlightRef).map(key => recommendation.segmentFlightRef[key]);
+                    recommendation.segmentFlightRef = recommendation.segmentFlightRef.referencingDetail ? [recommendation.segmentFlightRef] : convertObjectToArray(recommendation.segmentFlightRef);
                     for (recommendationSegment of recommendation.segmentFlightRef) {
                         let idaTemp = [], vueltaTemp = [];
                         /* response.response.flightIndex[0].groupOfFlights = Object.keys(response.response.flightIndex[0].groupOfFlights).map(key => response.response.flightIndex[0].groupOfFlights[key]); */
                         for (groupOfFlights of response.response.flightIndex[0].groupOfFlights) {
                             if (recommendationSegment.referencingDetail[0].refNumber == groupOfFlights.propFlightGrDetail.flightProposal[0].ref) {
                                 idaTemp = [];
-                                groupOfFlights.flightDetails = groupOfFlights.flightDetails.flightInformation ? [groupOfFlights.flightDetails] : Object.keys(groupOfFlights.flightDetails).map(key => groupOfFlights.flightDetails[key]);
+                                groupOfFlights.flightDetails = groupOfFlights.flightDetails.flightInformation ? [groupOfFlights.flightDetails] : convertObjectToArray(groupOfFlights.flightDetails);
                                 for (flightDetails of groupOfFlights.flightDetails) {
                                     idaTemp.push({
                                         iataFrom: flightDetails.flightInformation.location[0].locationId,
@@ -191,7 +161,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                         for (groupOfFlights of response.response.flightIndex[1].groupOfFlights) {
                             if (recommendationSegment.referencingDetail[1].refNumber == groupOfFlights.propFlightGrDetail.flightProposal[0].ref) {
                                 vueltaTemp = [];
-                                groupOfFlights.flightDetails = groupOfFlights.flightDetails.flightInformation ? [groupOfFlights.flightDetails] : Object.keys(groupOfFlights.flightDetails).map(key => groupOfFlights.flightDetails[key]);
+                                groupOfFlights.flightDetails = groupOfFlights.flightDetails.flightInformation ? [groupOfFlights.flightDetails] : convertObjectToArray(groupOfFlights.flightDetails);
                                 for (flightDetails of groupOfFlights.flightDetails) {
                                     vueltaTemp.push({
                                         iataFrom: flightDetails.flightInformation.location[0].locationId,
@@ -250,7 +220,7 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
                         });
                     }
                 }
-                res.status(200).json({ error: false, data: result, session: {} });
+                res.status(200).json({ error: false, data: result, session: response });
             } else {
                 res.status(200).json({ error: true, data: { title1: 'Ups', title2: 'No se encontraron vuelos 1', title3: 'Intenta con otros parametros de busqueda.' }, session: {} });
             }
@@ -260,9 +230,75 @@ exports.Fare_MasterPricerTravelBoardSearch = async (req, res) => {
     } else {
         res.status(200).json({ error: true, data: { title1: 'Ups', title2: 'No se encontraron vuelos 3', title3: 'Intenta con otros parametros de busqueda.' }, session: {} });
     }
-    /* console.log(response);
-    res.status(200).json({ error: false, data: response }); */
-
+}
+exports.air_sell = async (req, res) => {
+    let segmentIda = [], segmentVuelta = [], seats = [];
+    const body = req.body, bodyOk = {
+        itinerary: {
+            from: body.flight.ida[0].iataFrom,
+            to: body.flight.ida[body.flight.ida.length - 1].iataTo,
+            segments: []
+        }
+    };
+    for (segment of body.flight.ida) {
+        segmentIda.push({
+            departureDate: convertDateTime(`${segment.dateFrom} ${segment.timeFrom}`),
+            from: segment.iataFrom,
+            to: segment.iataTo,
+            companyCode: segment.marketingCarrier,
+            flightNumber: segment.numberTrip,
+            bookingClass: segment.rbd,
+            nrOfPassengers: (body.pax.adult + body.pax.child + body.pax.infant)
+        });
+    }
+    bodyOk.itinerary.segments = segmentIda;
+    /* if (body.vuelta) {
+        for (segment of body.vuelta) {
+            segmentVuelta.push({
+                departureDate: `${segment.dateFrom} ${segment.timeFrom}`,
+                from: segment.iataFrom,
+                to: segment.iataTo,
+                companyCode: segment.marketingCarrier,
+                flightNumber: segment.numberTrip,
+                bookingClass: segment.rbd,
+                nrOfPassengers: 1
+            });
+        }
+    } */
+    console.log('bodyOk: ', bodyOk);
+    const response = await procesosAmadeus('air-sell', 'POST', bodyOk);
+    response.sellResult.response.itineraryDetails = response.sellResult.response.itineraryDetails.originDestination ? [response.sellResult.response.itineraryDetails] : convertObjectToArray(response.sellResult.response.itineraryDetails);
+    for (recommendations of response.sellResult.response.itineraryDetails) {
+        let details = [];
+        recommendations.segmentInformation = recommendations.segmentInformation.actionDetails ? [recommendations.segmentInformation] : convertObjectToArray(recommendations.segmentInformation);
+        for (recommendation of recommendations.segmentInformation) {
+            details.push({
+                seats: recommendation.actionDetails.quantity,
+                state: recommendation.actionDetails.statusCode,
+                terminal: recommendation.apdSegment?.departureStationInfo?.terminal ?? null,
+                equipment: recommendation.apdSegment?.legDetails?.equipment ?? null,
+                from: recommendation.flightDetails.boardPointDetails.trueLocationId,
+                to: recommendation.flightDetails.offpointDetails.trueLocationId,
+                dateFrom: recommendation.flightDetails.flightDate.departureDate,
+                /* dateTo: recommendation.flightDetails.flightDate.arrivalDate, */
+                timeFrom: recommendation.flightDetails.flightDate.departureTime,
+                /* timeTo: recommendation.flightDetails.flightDate.arrivalTime, */
+                variation: recommendation.flightDetails.flightDate?.dateVariation ?? null,
+                marketingCompany: recommendation.flightDetails.companyDetails.marketingCompany,
+                flightIndicator: recommendation.flightDetails.flightTypeDetails.flightIndicator,
+                specialSegment: recommendation.flightDetails?.specialSegment ?? null,
+                bookingClass: recommendation.flightDetails.flightIdentification?.bookingClass ?? null,
+                flightNumber: recommendation.flightDetails.flightIdentification?.flightNumber ?? null
+            });
+        }
+        seats.push({
+            origin: recommendations.originDestination.origin,
+            destination: recommendations.originDestination.destination,
+            details: details
+        });
+    }
+    console.log('response: ', response)
+    res.status(200).json({ error: false, data: { seats: seats, message: response }, session: response.sessionData });
 }
 
 async function procesosAmadeus(path, method, body) {
@@ -277,5 +313,16 @@ async function procesosAmadeus(path, method, body) {
             if (error) { reject({ error: true, data: error }); } else { resolve(response.body); }
         })
     });
+}
+function convertDateTime(dateTimeStr) {
+    const datePart = dateTimeStr.slice(0, 6), timePart = dateTimeStr.slice(7);
+    const day = datePart.slice(0, 2), month = datePart.slice(2, 4), year = datePart.slice(4, 6), hour = timePart.slice(0, 2), minute = timePart.slice(2, 4);
+    return `${day}-${month}-${year} ${hour}:${minute}:00`;
+}
+function normalizeString(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+function convertObjectToArray(obj) {
+    return Object.keys(obj).map(key => obj[key]);
 }
 /* function esperar(data) { return new Promise(resolve => setTimeout(resolve, data)); } */
