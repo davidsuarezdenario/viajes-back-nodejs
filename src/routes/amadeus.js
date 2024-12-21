@@ -7,6 +7,7 @@ router.get('/array_iata', amadeusController.updateArrayIata);
 router.post('/search_iata', amadeusController.searchArrayIata);
 router.post('/fare_search', amadeusController.fare_search);
 router.post('/air_sell', amadeusController.air_sell);
+router.post('/pnr_ame', amadeusController.pnr_ame);
 /* 
 router.post('/informative_pricing_without_pnr', amadeusController.Fare_InformativePricingWithoutPNR);
 router.post('/sell_from_recommendation', amadeusController.Air_SellFromRecommendation);

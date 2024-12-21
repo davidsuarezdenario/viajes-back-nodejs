@@ -255,7 +255,7 @@ exports.air_sell = async (req, res) => {
         });
     }
     bodyOk.itinerary.segments = segmentIda;
-    /* if (body.vuelta) {
+    if (body.vuelta) {
         for (segment of body.vuelta) {
             segmentVuelta.push({
                 departureDate: `${segment.dateFrom} ${segment.timeFrom}`,
@@ -267,7 +267,7 @@ exports.air_sell = async (req, res) => {
                 nrOfPassengers: 1
             });
         }
-    } */
+    }
     console.log('bodyOk: ', bodyOk);
     const response = await procesosAmadeus('air-sell', 'POST', bodyOk);
     response.sellResult.response.itineraryDetails = response.sellResult.response.itineraryDetails.originDestination ? [response.sellResult.response.itineraryDetails] : convertObjectToArray(response.sellResult.response.itineraryDetails);
@@ -302,6 +302,13 @@ exports.air_sell = async (req, res) => {
     }
     console.log('response: ', response)
     res.status(200).json({ error: false, data: { seats: seats, message: response }, session: response.sessionData });
+}
+exports.pnr_ame = async (req, res) => {
+    const body = req.body;
+    console.log('body: ', body);
+    const response = await procesosAmadeus('pnr-create', 'POST', body);
+    console.log('response: ', response);
+    res.status(200).json({ error: false, data: response });
 }
 
 async function procesosAmadeus(path, method, body) {
